@@ -1,63 +1,51 @@
 import javax.swing.*;
-import java.awt.*;
 import java.awt.event.*;
 
 public class LoginPage {
-
     public static void main(String[] args) {
-        // Create the main frame
-        JFrame frame = new JFrame("Library Login");
-        frame.setSize(350, 200);
+        // Create a new frame
+        JFrame frame = new JFrame("Login Page");
+        frame.setSize(300, 200);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setLayout(null);
+        frame.setLayout(null); // using absolute layout for simplicity
 
-        // Email label and text field
-        JLabel emailLabel = new JLabel("Email:");
-        emailLabel.setBounds(20, 20, 80, 25);
-        frame.add(emailLabel);
+        // Username label and text field
+        JLabel userLabel = new JLabel("Username:");
+        userLabel.setBounds(20, 20, 80, 25);
+        frame.add(userLabel);
 
-        JTextField emailField = new JTextField();
-        emailField.setBounds(100, 20, 200, 25);
-        frame.add(emailField);
+        JTextField userText = new JTextField();
+        userText.setBounds(100, 20, 160, 25);
+        frame.add(userText);
 
-        // Password label and field
-        JLabel passLabel = new JLabel("Password:");
-        passLabel.setBounds(20, 60, 80, 25);
-        frame.add(passLabel);
+        // Password label and password field
+        JLabel passwordLabel = new JLabel("Password:");
+        passwordLabel.setBounds(20, 60, 80, 25);
+        frame.add(passwordLabel);
 
-        JPasswordField passField = new JPasswordField();
-        passField.setBounds(100, 60, 200, 25);
-        frame.add(passField);
+        JPasswordField passwordText = new JPasswordField();
+        passwordText.setBounds(100, 60, 160, 25);
+        frame.add(passwordText);
 
         // Login button
-        JButton loginBtn = new JButton("Login");
-        loginBtn.setBounds(100, 100, 200, 30);
-        frame.add(loginBtn);
+        JButton loginButton = new JButton("Login");
+        loginButton.setBounds(100, 100, 80, 25);
+        frame.add(loginButton);
 
-        // Message label
-        JLabel messageLabel = new JLabel("", SwingConstants.CENTER);
-        messageLabel.setBounds(20, 140, 310, 25);
-        messageLabel.setForeground(Color.RED);
-        frame.add(messageLabel);
-
-        // Action when login button is clicked
-        loginBtn.addActionListener(new ActionListener() {
+        // Action listener for the button
+        loginButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                String email = emailField.getText();
-                String password = new String(passField.getPassword());
+                String username = userText.getText();
+                String password = new String(passwordText.getPassword());
 
-                // For now, just check dummy credentials
-                if(email.equals("user@example.com") && password.equals("password")) {
-                    messageLabel.setForeground(new Color(0, 128, 0));
-                    messageLabel.setText("Login successful!");
+                if(username.equals("admin") && password.equals("1234")) {
+                    JOptionPane.showMessageDialog(frame, "Login successful!");
                 } else {
-                    messageLabel.setForeground(Color.RED);
-                    messageLabel.setText("Invalid email or password.");
+                    JOptionPane.showMessageDialog(frame, "Invalid credentials.");
                 }
             }
         });
 
-        frame.setLocationRelativeTo(null); // center on screen
         frame.setVisible(true);
     }
 }
