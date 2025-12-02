@@ -39,6 +39,7 @@ CREATE TABLE Book (
 );
 
 
+
 -- Tracks who borrowed what and when
 CREATE TABLE Loan (
     loan_id INT PRIMARY KEY AUTO_INCREMENT,
