@@ -1,0 +1,910 @@
+/*
+*******************************************************************
+
+DBMS Project
+Gonzo's HD Sports Booking System
+
+By: Jaedon McClendon, Bolu Afariogun, Jessie Rosas, John Gonsalves
+
+*******************************************************************
+*/
+
+
+
+import javax.swing.*;
+import java.awt.*;
+import java.sql.*;
+import java.util.Vector;
+
+public class ProjectUI extends JFrame {
+
+    
+    
+    
+    String url = "jdbc:mysql://localhost:3306/DBMS_Project";
+    String user = "root";
+    String password = "Doggie01_"; // Replace with your MySQL password
+    
+    
+    JComboBox<String> tableSelector;
+    JTable tableDisplay;
+    JScrollPane tableScrollPane;
+    JTextField searchField;
+    JButton searchBtn;
+    JButton sortNameBtn;
+    JButton sortIDBtn;
+    private String dbHost;
+    private String dbPort;
+    private String dbUser;
+    private String dbPass;
+
+    public ProjectUI() {
+
+
+        
+        setTitle("Gonzo's HD Sports Booking System");
+        setSize(1100, 600);
+        setLayout(new BorderLayout());
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        
+        JPanel top = new JPanel(new FlowLayout());
+
+        top.add(new JLabel("Select Table:"));
+
+        tableSelector = new JComboBox<>(new String[]{
+                "CUSTOMER", "SIMULATOR", "TIMESLOT", "BOOKINGS"
+        });
+        top.add(tableSelector);
+
+        searchField = new JTextField(15);
+        searchBtn = new JButton("Search");
+        sortNameBtn = new JButton("Sort Names");
+        sortIDBtn = new JButton("Sort IDs");
+
+        JButton viewBtn = new JButton("View Table");
+        JButton insertBtn = new JButton("Insert");
+        JButton updateBtn = new JButton("Update");
+        JButton deleteBtn = new JButton("Delete");
+        JButton reportBtn = new JButton("Reports");
+        JButton popOutBtn = new JButton("Pop-Out View");
+        
+
+        top.add(viewBtn);
+        top.add(insertBtn);
+        top.add(updateBtn);
+        top.add(deleteBtn);
+        top.add(reportBtn);
+        top.add(popOutBtn);
+        
+        
+        
+        popOutBtn.addActionListener(e -> openPopOutTable());
+        insertBtn.addActionListener(e -> openInsertDialog());
+        updateBtn.addActionListener(e -> openUpdateDialog());
+        deleteBtn.addActionListener(e -> openDeleteDialog());
+        reportBtn.addActionListener(e -> openReportsDialog());
+        viewBtn.addActionListener(e -> viewTable());
+        
+
+        add(top, BorderLayout.NORTH);
+
+        
+        
+        tableDisplay = new JTable();
+        tableScrollPane = new JScrollPane(tableDisplay);
+        add(tableScrollPane, BorderLayout.CENTER);
+
+        setVisible(true);
+    }
+    //
+    //
+    //                     DB CONNECTION
+    private Connection getConn() throws Exception {
+        Class.forName("com.mysql.cj.jdbc.Driver");
+        String url = "jdbc:mysql://" + dbHost + ":" + dbPort + "/DBMS_Project";
+
+    return DriverManager.getConnection(url, dbUser, dbPass);
+    }
+
+    private static javax.swing.table.TableModel buildTableModel(ResultSet rs) throws Exception {
+
+        ResultSetMetaData meta = rs.getMetaData();
+        int columnCount = meta.getColumnCount();
+
+        Vector<String> columnNames = new Vector<>();
+        for (int i = 1; i <= columnCount; i++) {
+            columnNames.add(meta.getColumnName(i));
+        }
+
+        Vector<Vector<Object>> rows = new Vector<>();
+        while (rs.next()) {
+            Vector<Object> row = new Vector<>();
+            for (int i = 1; i <= columnCount; i++) {
+                row.add(rs.getObject(i));
+            }
+            rows.add(row);
+        }
+
+        return new javax.swing.table.DefaultTableModel(rows, columnNames);
+    }
+    //
+    //
+    //                     VIEW TABLE
+    private void viewTable() {
+
+    JPanel top = (JPanel) getContentPane().getComponent(0);
+    top.remove(searchField);
+    top.remove(searchBtn);
+
+
+    // Sort buttons modification for Customer table
+    // Removes existing sort buttons
+    for (Component c : top.getComponents()) {
+        if (c.getName() != null && (c.getName().equals("sortName") || c.getName().equals("sortID"))) {
+            top.remove(c);
+        }
+    }
+
+    String tableName = tableSelector.getSelectedItem().toString();
+
+    
+    if (tableName.equals("CUSTOMER")) {
+        sortNameBtn = new JButton("Sort Names");
+        sortIDBtn = new JButton("Sort IDs");
+        searchField = new JTextField(15);
+
+        sortNameBtn.setName("sortName");  
+        sortIDBtn.setName("sortID");
+
+        sortNameBtn.addActionListener(e -> sortNamesAlphabetically());
+        sortIDBtn.addActionListener(e -> sortIDsNumerically());
+        searchField.addActionListener(e -> searchCustomersByName(searchField.getText()));
+
+
+        top.add(sortNameBtn);
+        top.add(sortIDBtn);
+        top.add(searchField);
+    }
+
+    
+
+    // Refresh  
+    top.revalidate();
+    top.repaint();
+
+    
+    try (Connection conn = getConn();
+         Statement stmt = conn.createStatement();
+         ResultSet rs = stmt.executeQuery("SELECT * FROM " + tableName)) {
+
+        tableDisplay.setModel(buildTableModel(rs));
+
+    } catch (Exception ex) {
+        JOptionPane.showMessageDialog(this, ex.getMessage());
+    }
+}
+    //
+    //
+    //                     INSERT SECTION
+    private void openInsertDialog() {
+        JDialog dialog = new JDialog(this, "Choose Insert Type", true);
+        dialog.setSize(300, 150);
+        dialog.setLayout(new GridLayout(3, 1));
+
+        dialog.add(new JLabel("What would you like to insert?"));
+
+        JButton custBtn = new JButton("Insert Customer");
+        JButton bookBtn = new JButton("Insert Booking");
+
+        dialog.add(custBtn);
+        dialog.add(bookBtn);
+
+        custBtn.addActionListener(e -> {
+            dialog.dispose();
+            openCustomerInsertDialog();
+        });
+
+        bookBtn.addActionListener(e -> {
+            dialog.dispose();
+            openBookingInsertDialog();
+        });
+
+        dialog.setVisible(true);
+    }
+
+    private void openCustomerInsertDialog() {
+        JDialog dialog = new JDialog(this, "Insert Customer", true);
+        dialog.setSize(350, 250);
+        dialog.setLayout(new GridLayout(6, 2));
+
+        JTextField idField = new JTextField();
+        JTextField nameField = new JTextField();
+        JTextField phoneField = new JTextField();
+        JTextField emailField = new JTextField();
+        JCheckBox discountBox = new JCheckBox("Discount Eligible?");
+
+        dialog.add(new JLabel("Customer ID:"));
+        dialog.add(idField);
+        dialog.add(new JLabel("Name:"));
+        dialog.add(nameField);
+        dialog.add(new JLabel("Phone:"));
+        dialog.add(phoneField);
+        dialog.add(new JLabel("Email:"));
+        dialog.add(emailField);
+        dialog.add(discountBox);
+
+        JButton saveBtn = new JButton("Save");
+        dialog.add(saveBtn);
+
+        saveBtn.addActionListener(e -> {
+            insertCustomer(
+                    idField.getText(),
+                    nameField.getText(),
+                    phoneField.getText(),
+                    emailField.getText(),
+                    discountBox.isSelected()
+            );
+            dialog.dispose();
+        });
+
+        dialog.setVisible(true);
+    }
+
+    private void insertCustomer(String custID, String name, String phone, String email, boolean discount) {
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(
+                     "INSERT INTO CUSTOMER (cust_id, cust_name, phone_num, email, discount_eligibility) VALUES (?, ?, ?, ?, ?)"
+             )) {
+
+            ps.setString(1, custID);
+            ps.setString(2, name);
+            ps.setString(3, phone);
+            ps.setString(4, email);
+            ps.setBoolean(5, discount);
+
+            ps.executeUpdate();
+            JOptionPane.showMessageDialog(this, "Customer added successfully.");
+
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage());
+        }
+    }
+
+    private void openBookingInsertDialog() {
+        JDialog dialog = new JDialog(this, "Insert Booking", true);
+        dialog.setSize(350, 300);
+        dialog.setLayout(new GridLayout(6, 2));
+
+        JTextField bookIDField = new JTextField();
+        JTextField dateField = new JTextField();
+        JTextField custIDField = new JTextField();
+        JTextField simIDField = new JTextField();
+        JTextField slotIDField = new JTextField();
+
+        dialog.add(new JLabel("Booking ID:"));
+        dialog.add(bookIDField);
+        dialog.add(new JLabel("Date (YYYY-MM-DD):"));
+        dialog.add(dateField);
+        dialog.add(new JLabel("Customer ID:"));
+        dialog.add(custIDField);
+        dialog.add(new JLabel("Simulator ID:"));
+        dialog.add(simIDField);
+        dialog.add(new JLabel("Timeslot ID:"));
+        dialog.add(slotIDField);
+
+        JButton saveBtn = new JButton("Save");
+        dialog.add(saveBtn);
+
+        saveBtn.addActionListener(e -> {
+            insertBooking(
+                    bookIDField.getText(),
+                    dateField.getText(),
+                    custIDField.getText(),
+                    simIDField.getText(),
+                    slotIDField.getText()
+            );
+            dialog.dispose();
+        });
+
+        dialog.setVisible(true);
+    }
+
+    private void insertBooking(String bookID, String date, String custID, String simID, String slotID) {
+        try (Connection conn = getConn()) {
+
+            // Input Validation for Booking ID
+            if (!bookID.matches("B\\d{3}")) {
+                JOptionPane.showMessageDialog(this,
+                        "Invalid Booking ID format.\nUse: B001, B002, etc.");
+                return;
+            }
+            
+            if (isBookingConflict(simID, slotID, date)) { // Check for booking conflict
+            JOptionPane.showMessageDialog(this,
+                "ERROR: That simulator is already booked for that timeslot.\nPlease choose another timeslot or simulator.");
+            return; 
+            }
+
+            PreparedStatement ps1 = conn.prepareStatement(
+                    "SELECT discount_eligibility FROM CUSTOMER WHERE cust_id=?"
+            );
+            ps1.setString(1, custID);
+            ResultSet rs1 = ps1.executeQuery();
+
+            boolean discount = false;
+            if (rs1.next()) {
+                discount = rs1.getBoolean("discount_eligibility");
+            }
+
+            
+            PreparedStatement ps2 = conn.prepareStatement(
+                    "SELECT price FROM TIMESLOT WHERE slot_id=?"
+            );
+            ps2.setString(1, slotID);
+            ResultSet rs2 = ps2.executeQuery();
+
+            int basePrice = 0;
+            if (rs2.next()) {
+                basePrice = rs2.getInt("price");
+            }
+
+            // Calculate price with discount 
+            int finalPrice = discount ? basePrice / 2 : basePrice;
+
+
+            PreparedStatement ps3 = conn.prepareStatement(
+                    "INSERT INTO BOOKINGS (book_id, book_date, cust_id, sim_id, slot_id, final_price) VALUES (?, ?, ?, ?, ?, ?)"
+            );
+
+            ps3.setString(1, bookID);
+            ps3.setString(2, date);
+            ps3.setString(3, custID);
+            ps3.setString(4, simID);
+            ps3.setString(5, slotID);
+            ps3.setInt(6, finalPrice);
+
+            ps3.executeUpdate();
+
+            JOptionPane.showMessageDialog(this,
+                    "Booking added.\nFinal Price: $" + finalPrice);
+
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage());
+        }
+    }
+
+    private boolean isBookingConflict(String simID, String slotID, String bookDate) {
+    try (Connection conn = getConn();
+         PreparedStatement ps = conn.prepareStatement(
+            "SELECT * FROM BOOKINGS WHERE sim_id=? AND slot_id=? AND book_date=?"
+         )) {
+
+        ps.setString(1, simID);
+        ps.setString(2, slotID);
+        ps.setString(3, bookDate);
+
+        ResultSet rs = ps.executeQuery();
+        return rs.next(); // true if conflict exists
+
+    } catch (Exception ex) {
+        JOptionPane.showMessageDialog(this, ex.getMessage());
+        return true; // catch and block conflict
+    }
+}
+    //
+    //
+    //                     UPDATE SECTION
+    private void openUpdateDialog() {
+        JDialog dialog = new JDialog(this, "Choose Update Type", true);
+        dialog.setSize(300, 150);
+        dialog.setLayout(new GridLayout(3, 1));
+
+        dialog.add(new JLabel("What would you like to update?"));
+
+        JButton custBtn = new JButton("Update Customer");
+        JButton bookBtn = new JButton("Update Booking");
+
+        dialog.add(custBtn);
+        dialog.add(bookBtn);
+
+        custBtn.addActionListener(e -> {
+            dialog.dispose();
+            openCustomerUpdateDialog();
+        });
+
+        bookBtn.addActionListener(e -> {
+            dialog.dispose();
+            openBookingUpdateDialog();
+        });
+
+        dialog.setVisible(true);
+    }
+
+    private void openCustomerUpdateDialog() {
+        JDialog dialog = new JDialog(this, "Update Customer", true);
+        dialog.setSize(350, 250);
+        dialog.setLayout(new GridLayout(6, 2));
+
+        JTextField idField = new JTextField();
+        JTextField nameField = new JTextField();
+        JTextField phoneField = new JTextField();
+        JTextField emailField = new JTextField();
+        JCheckBox discountBox = new JCheckBox("Discount Eligible?");
+
+        dialog.add(new JLabel("Customer ID (to update):"));
+        dialog.add(idField);
+        dialog.add(new JLabel("New Name:"));
+        dialog.add(nameField);
+        dialog.add(new JLabel("New Phone:"));
+        dialog.add(phoneField);
+        dialog.add(new JLabel("New Email:"));
+        dialog.add(emailField);
+        dialog.add(discountBox);
+        dialog.add(new JLabel("")); // filler
+
+        JButton saveBtn = new JButton("Save");
+        dialog.add(saveBtn);
+
+        saveBtn.addActionListener(e -> {
+            updateCustomer(
+                    idField.getText(),
+                    nameField.getText(),
+                    phoneField.getText(),
+                    emailField.getText(),
+                    discountBox.isSelected()
+            );
+            dialog.dispose();
+        });
+
+        dialog.setVisible(true);
+    }
+
+    private void updateCustomer(String custID, String newName, String newPhone, String newEmail, boolean discount) {
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(
+                     "UPDATE CUSTOMER SET cust_name=?, phone_num=?, email=?, discount_eligibility=? WHERE cust_id=?"
+             )) {
+
+            ps.setString(1, newName);
+            ps.setString(2, newPhone);
+            ps.setString(3, newEmail);
+            ps.setBoolean(4, discount);
+            ps.setString(5, custID);
+
+            ps.executeUpdate();
+            JOptionPane.showMessageDialog(this, "Customer updated successfully.");
+
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage());
+        }
+    }
+
+    private void openBookingUpdateDialog() {
+        JDialog dialog = new JDialog(this, "Update Booking", true);
+        dialog.setSize(350, 300);
+        dialog.setLayout(new GridLayout(6, 2));
+
+        JTextField bookIDField = new JTextField();
+        JTextField dateField = new JTextField();
+        JTextField custIDField = new JTextField();
+        JTextField simIDField = new JTextField();
+        JTextField slotIDField = new JTextField();
+
+        dialog.add(new JLabel("Booking ID (to update):"));
+        dialog.add(bookIDField);
+        dialog.add(new JLabel("New Date:"));
+        dialog.add(dateField);
+        dialog.add(new JLabel("New Customer ID:"));
+        dialog.add(custIDField);
+        dialog.add(new JLabel("New Simulator ID:"));
+        dialog.add(simIDField);
+        dialog.add(new JLabel("New Timeslot ID:"));
+        dialog.add(slotIDField);
+
+        JButton saveBtn = new JButton("Save");
+        dialog.add(saveBtn);
+
+        saveBtn.addActionListener(e -> {
+            updateBooking(
+                    bookIDField.getText(),
+                    dateField.getText(),
+                    custIDField.getText(),
+                    simIDField.getText(),
+                    slotIDField.getText()
+            );
+            dialog.dispose();
+        });
+
+        dialog.setVisible(true);
+    }
+
+    private void updateBooking(String bookID, String date, String custID, String simID, String slotID) {
+        try (Connection conn = getConn()) {
+
+
+            if (!bookID.matches("B\\d{3}")) {
+                JOptionPane.showMessageDialog(this,
+                        "Invalid Booking ID format.\nUse: B001, B002, etc.");
+                return;
+            }
+
+            if (isBookingConflict(simID, slotID, date)) { // Check for booking conflict
+            JOptionPane.showMessageDialog(this,
+                "ERROR: That simulator is already booked for that timeslot.\nPlease choose another timeslot or simulator.");
+            return; 
+            }
+
+            // Recalculate price if customer changed
+            PreparedStatement ps1 = conn.prepareStatement(
+                    "SELECT discount_eligibility FROM CUSTOMER WHERE cust_id=?"
+            );
+            ps1.setString(1, custID);
+            ResultSet rs1 = ps1.executeQuery();
+
+            boolean discount = false;
+            if (rs1.next()) {
+                discount = rs1.getBoolean("discount_eligibility");
+            }
+
+            PreparedStatement ps2 = conn.prepareStatement(
+                    "SELECT price FROM TIMESLOT WHERE slot_id=?"
+            );
+            ps2.setString(1, slotID);
+            ResultSet rs2 = ps2.executeQuery();
+
+            int basePrice = 0;
+            if (rs2.next()) {
+                basePrice = rs2.getInt("price");
+            }
+
+            int finalPrice = discount ? basePrice / 2 : basePrice; 
+
+            PreparedStatement ps3 = conn.prepareStatement(
+                    "UPDATE BOOKINGS SET book_date=?, cust_id=?, sim_id=?, slot_id=?, final_price=? WHERE book_id=?"
+            );
+
+            ps3.setString(1, date); 
+            ps3.setString(2, custID); 
+            ps3.setString(3, simID); 
+            ps3.setString(4, slotID); 
+            ps3.setInt(5, finalPrice); 
+            ps3.setString(6, bookID); 
+
+            ps3.executeUpdate();
+            JOptionPane.showMessageDialog(this, "Booking updated successfully.");
+
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage());
+        }
+    }
+    //
+    //
+    //                     DELETE SECTION
+    private void openDeleteDialog() {
+        JDialog dialog = new JDialog(this, "Choose Delete Type", true);
+        dialog.setSize(300, 150);
+        dialog.setLayout(new GridLayout(3, 1));
+
+        dialog.add(new JLabel("What would you like to delete?"));
+
+        JButton custBtn = new JButton("Delete Customer");
+        JButton bookBtn = new JButton("Delete Booking");
+
+        dialog.add(custBtn);
+        dialog.add(bookBtn);
+
+        custBtn.addActionListener(e -> {
+            dialog.dispose();
+            openCustomerDeleteDialog();
+        });
+
+        bookBtn.addActionListener(e -> {
+            dialog.dispose();
+            openBookingDeleteDialog();
+        });
+
+        dialog.setVisible(true);
+    }
+
+    private void openCustomerDeleteDialog() {
+        JDialog dialog = new JDialog(this, "Delete Customer", true);
+        dialog.setSize(300, 150);
+        dialog.setLayout(new GridLayout(2, 2));
+
+        JTextField idField = new JTextField();
+
+        dialog.add(new JLabel("Customer ID to delete:"));
+        dialog.add(idField);
+
+        JButton deleteBtn = new JButton("Delete");
+        dialog.add(deleteBtn);
+
+        deleteBtn.addActionListener(e -> {
+            deleteCustomer(idField.getText());
+            dialog.dispose();
+        });
+
+        dialog.setVisible(true);
+    }
+
+    private void deleteCustomer(String custID) {
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(
+                     "DELETE FROM CUSTOMER WHERE cust_id=?"
+             )) {
+
+            ps.setString(1, custID);
+            ps.executeUpdate();
+            JOptionPane.showMessageDialog(this, "Customer deleted successfully.");
+
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage());
+        }
+    }
+
+    private void openBookingDeleteDialog() {
+        JDialog dialog = new JDialog(this, "Delete Booking", true);
+        dialog.setSize(300, 150);
+        dialog.setLayout(new GridLayout(2, 2));
+
+        JTextField idField = new JTextField();
+
+        dialog.add(new JLabel("Booking ID to delete:"));
+        dialog.add(idField);
+
+        JButton deleteBtn = new JButton("Delete");
+        dialog.add(deleteBtn);
+
+        deleteBtn.addActionListener(e -> {
+            deleteBooking(idField.getText());
+            dialog.dispose();
+        });
+
+        dialog.setVisible(true);
+    }
+
+    private void deleteBooking(String bookID) {
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(
+                     "DELETE FROM BOOKINGS WHERE book_id=?"
+             )) {
+
+            ps.setString(1, bookID);
+            ps.executeUpdate();
+            JOptionPane.showMessageDialog(this, "Booking deleted successfully.");
+
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage());
+        }
+    }
+    //
+    //
+    //                     REPORTS SECTION
+    private void openReportsDialog() {
+        JDialog dialog = new JDialog(this, "Reports", true);
+        dialog.setSize(350, 200);
+        dialog.setLayout(new GridLayout(4, 1));
+
+        JButton todayBtn = new JButton("Today's Bookings");
+        JButton byDateBtn = new JButton("Bookings by Date");
+        JButton usageBtn = new JButton("Simulator Usage");
+        JButton revenueBtn = new JButton("Revenue by Simulator");
+
+        dialog.add(todayBtn);
+        dialog.add(byDateBtn);
+        dialog.add(usageBtn);
+        dialog.add(revenueBtn);
+
+        todayBtn.addActionListener(e -> {
+            dialog.dispose();
+            showTodayBookings();
+        });
+
+        byDateBtn.addActionListener(e -> {
+            dialog.dispose();
+            openBookingsByDateDialog();
+        });
+
+        usageBtn.addActionListener(e -> {
+            dialog.dispose();
+            showSimulatorUsage();
+        });
+
+        revenueBtn.addActionListener(e -> {
+            dialog.dispose();
+            showRevenueBySimulator();
+        });
+        
+
+
+        dialog.setVisible(true);
+    }
+
+    private void showTodayBookings() {
+        try (Connection conn = getConn();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(
+                     "SELECT * FROM BOOKINGS WHERE book_date = CURDATE()"
+             )) {
+
+            tableDisplay.setModel(buildTableModel(rs));
+
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage());
+        }
+    }
+
+    private void openBookingsByDateDialog() {
+        JDialog dialog = new JDialog(this, "Bookings by Date", true);
+        dialog.setSize(300, 150);
+        dialog.setLayout(new GridLayout(2, 2));
+
+        JTextField dateField = new JTextField();
+
+        dialog.add(new JLabel("Enter date (YYYY-MM-DD):"));
+        dialog.add(dateField);
+
+        JButton viewBtn = new JButton("View");
+        dialog.add(viewBtn);
+
+        viewBtn.addActionListener(e -> {
+            showBookingsByDate(dateField.getText());
+            dialog.dispose();
+        });
+
+        dialog.setVisible(true);
+    }
+
+    private void showBookingsByDate(String date) {
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(
+                     "SELECT * FROM BOOKINGS WHERE book_date=?"
+             )) {
+
+            ps.setString(1, date);
+
+            ResultSet rs = ps.executeQuery();
+            tableDisplay.setModel(buildTableModel(rs));
+
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage());
+        }
+    }
+
+    private void showSimulatorUsage() {
+        try (Connection conn = getConn();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(
+                     "SELECT S.sim_id, S.sim_name, COUNT(B.book_id) AS total_bookings " + "FROM SIMULATOR S " 
+                     + "LEFT JOIN BOOKINGS B ON S.sim_id = B.sim_id " + "GROUP BY S.sim_id, S.sim_name"
+             )) {
+
+            tableDisplay.setModel(buildTableModel(rs));
+
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage());
+        }
+    }
+
+    private void showRevenueBySimulator() {
+    try (Connection conn = getConn();
+         Statement stmt = conn.createStatement();
+         ResultSet rs = stmt.executeQuery(
+             "SELECT S.sim_id, S.sim_name, IFNULL(SUM(B.final_price), 0) AS total_revenue " + "FROM SIMULATOR S " 
+             + "LEFT JOIN BOOKINGS B ON S.sim_id = B.sim_id " + "GROUP BY S.sim_id, S.sim_name"
+         )) {
+
+        tableDisplay.setModel(buildTableModel(rs));
+
+    } catch (Exception ex) {
+        JOptionPane.showMessageDialog(this, ex.getMessage());
+    }
+}
+    //
+    //
+    //                     SORTING SECTION
+    private void sortNamesAlphabetically() {
+        try (Connection conn = getConn();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(
+                     "SELECT * FROM CUSTOMER ORDER BY cust_name ASC"
+             )) {
+
+            tableDisplay.setModel(buildTableModel(rs));
+
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage());
+        }
+    }
+
+    private void sortIDsNumerically() {
+        try (Connection conn = getConn();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(
+                     "SELECT * FROM CUSTOMER ORDER BY cust_id+0 ASC"
+             )) {
+
+            tableDisplay.setModel(buildTableModel(rs));
+
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage());
+        }
+    }
+
+    private void searchCustomersByName(String searchText) {
+    try (Connection conn = getConn();
+         PreparedStatement ps = conn.prepareStatement(
+             "SELECT * FROM CUSTOMER WHERE cust_name LIKE ?"
+         )) {
+
+        ps.setString(1, "%" + searchText + "%");
+
+        ResultSet rs = ps.executeQuery();
+
+        tableDisplay.setModel(buildTableModel(rs));
+
+    } catch (Exception ex) {
+        JOptionPane.showMessageDialog(this, ex.getMessage());
+    }
+}
+    //
+    //
+    //                    POP OUT CURRENT TABLE STATE  
+    private void openPopOutTable() { 
+
+    javax.swing.table.TableModel currentModel = tableDisplay.getModel();
+
+    JTable popupTable = new JTable(currentModel);
+    JScrollPane scrollPane = new JScrollPane(popupTable);
+
+    JFrame frame = new JFrame("Pop-Out View");
+    frame.setSize(700, 500);
+    frame.setLayout(new BorderLayout());
+    frame.add(scrollPane, BorderLayout.CENTER);
+
+    frame.setVisible(true);
+}
+    //
+    //
+    //                     LOGIN FORM SECTION 
+private void showLoginDialog() {
+
+    JTextField hostField = new JTextField("localhost");
+    JTextField portField = new JTextField("3306");
+    JTextField userField = new JTextField("root");
+    JPasswordField passField = new JPasswordField();
+
+    Object[] message = {
+            "MySQL Host:", hostField,
+            "Port:", portField,
+            "Username:", userField,
+            "Password:", passField
+    };
+
+    int option = JOptionPane.showConfirmDialog(
+            null, message,
+            "Database Login",
+            JOptionPane.OK_CANCEL_OPTION,
+            JOptionPane.PLAIN_MESSAGE
+    );
+
+    if (option == JOptionPane.OK_OPTION) {
+        dbHost = hostField.getText().trim();
+        dbPort = portField.getText().trim();
+        dbUser = userField.getText().trim();
+        dbPass = new String(passField.getPassword());
+    } else {
+        System.exit(0);
+    }
+}
+
+    //
+    //
+    //                     MAIN
+    public static void main(String[] args) {
+        ProjectUI app = new ProjectUI();
+        app.showLoginDialog();
+        
+    }
+}
