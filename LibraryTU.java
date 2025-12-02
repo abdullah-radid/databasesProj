@@ -81,6 +81,41 @@ public class LibraryTU extends JFrame {
 
         panel.add(top, BorderLayout.NORTH);
 
+
+        
+    // Build the BOOK tab (this is basically your old layout)
+    private JPanel createMemberTab() {
+        JPanel panel = new JPanel(new BorderLayout());
+
+        // ---------- Top Panel: Input Fields ----------
+        JPanel top = new JPanel(new GridLayout(4, 6));
+
+        top.add(new JLabel("ISBN: "));
+        memberIDField = new JTextField();
+        top.add(memberIDField);
+
+        top.add(new JLabel("TITLE:"));
+        firstNameField = new JTextField();
+        top.add(firstNameField);
+
+        top.add(new JLabel("author:"));
+        middleNameField = new JTextField();
+        top.add(middleNameField);
+
+        top.add(new JLabel("publisher:"));
+        lastNameField = new JTextField();
+        top.add(lastNameField);
+
+        top.add(new JLabel("category:"));
+        memberTypeField = new JTextField();
+        top.add(memberTypeField);
+
+        top.add(new JLabel("edition:"));
+        contactInfoField = new JTextField();
+        top.add(contactInfoField);
+
+        panel.add(top, BorderLayout.NORTH);
+
         // ---------- Center Area: Output ----------
         output = new JTextArea();
         output.setEditable(false);
@@ -293,3 +328,4 @@ public class LibraryTU extends JFrame {
         new LibraryTU();
     }
 }
+
