@@ -15,7 +15,7 @@ CREATE TABLE Member (
     Fname VARCHAR(50) NOT NULL,
     Mname VARCHAR(50),
     Lname VARCHAR(50) NOT NULL,
-    member_type ENUM('Student', 'Faculty', 'Staff', 'Public') DEFAULT 'Public' ,
+    member_type ENUM('Student', 'Faculty', 'Public') DEFAULT 'Public' ,
     email VARCHAR(100) NOT NULL UNIQUE
 );
 
@@ -57,11 +57,11 @@ CREATE TABLE Loan (
 -- Tracks penalties for overdue items
 CREATE TABLE Fine (
     fine_id INT AUTO_INCREMENT PRIMARY KEY,
-    loan_id INT  -- should probably be unique since single loan generates one fine record
+    loan_id INT,  -- should probably be unique since single loan generates one fine record
     amount DECIMAL(10, 2) NOT NULL,
     status ENUM('Paid', 'Unpaid') DEFAULT 'Unpaid',
     applied_date DATE,
-    FOREIGN KEY (loan_id) REFERENCES Loan(loan_id), -- Links to the specific Loan transaction
+    FOREIGN KEY (loan_id) REFERENCES Loan(loan_id) -- Links to the specific Loan transaction
 );
 
 
@@ -85,14 +85,14 @@ CREATE INDEX idx_member_lname ON Member(Lname);
 
 
 -- Data insertion
-INSERT INTO Member (first_name, middle_name, last_name, member_type, contact_info) VALUES
+INSERT INTO Member (Fname, Mname, Lname, member_type, email) VALUES
 ('Jonathan', 'D.', 'Edwards', 'Student', 'jedwards@towson.edu'),
 ('Saif', 'A.', 'Al-Name', 'Student', 'saif@towson.edu'),
 ('Landon', 'B.', 'Lastname', 'Student', 'landon@towson.edu'),
-('Dr.', 'Jane', 'Professor', 'Teacher', 'jane@towson.edu'),
-('Blessing','O.','Abumere','Student','babumer@towson.edu')
+('Dr.', 'Jane', 'Professor', 'Faculty', 'jane@towson.edu'),
+('Blessing','O.','Abumere','Student','babumer1@towson.edu');
 
-INSERT INTO Staff (first_name, last_name, contact_info) VALUES
+INSERT INTO Staff (Fname, last_name, contact_info) VALUES
 ('Alice', 'Librarian', 'desk@library.edu'),
 ('Bob', 'Manager', 'manager@library.edu');
 
