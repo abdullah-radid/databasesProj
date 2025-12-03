@@ -24,8 +24,13 @@ CREATE TABLE Member (
 -- Tracks study rooms and labs
 CREATE TABLE Room (
     room_id INT AUTO_INCREMENT PRIMARY KEY,
-
+    capacity INT NOT NULL,
     room_type VARCHAR(50) NOT NULL -- was multivalue in ERD
+);
+CREATE TABLE Room (
+    room_id INT PRIMARY KEY AUTO_INCREMENT,
+    room_name VARCHAR(50),
+    capacity INT
 );
 
 -- Metadata for the books

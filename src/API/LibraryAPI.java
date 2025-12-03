@@ -10,9 +10,9 @@ import java.util.*;
  */
 public class LibraryAPI {
 
-
     /**
      * Tests database connection.
+     *
      * @return true if all good
      */
     public boolean testConnection() {
@@ -35,9 +35,10 @@ public class LibraryAPI {
         }
     }
 
-
     /**
-     * Maps a ResultSet containing book inventory records into a List of BookInventoryRecord objects.
+     * Maps a ResultSet containing book inventory records into a List of
+     * BookInventoryRecord objects.
+     *
      * @param rs The ResultSet containing book inventory records.
      * @return A List of BookInventoryRecord objects.
      * @throws SQLException if error
@@ -93,7 +94,8 @@ public class LibraryAPI {
 
     /**
      * Adds a book to the catalog AND inserts a physical copy.
-     * @apiNote  uses a transaction to make sure both happen or none happens.
+     *
+     * @apiNote uses a transaction to make sure both happen or none happens.
      */
     public void addNewBook(String isbn, String title, String author, String publisher, String category, String edition,
             String shelfLocation) throws SQLException {
@@ -149,7 +151,6 @@ public class LibraryAPI {
     // ----------------------
     // Member / Staff methods
     // ----------------------
-
 
     public Optional<MemberRecord> findMemberById(int memberId) throws SQLException {
         // Uses v_AllMembers per queries.sql
@@ -430,11 +431,12 @@ public class LibraryAPI {
                 List<Map<String, Object>> out = new ArrayList<>();
                 while (rs.next()) {
                     Map<String, Object> row = new HashMap<>();
-                    row.put("room_id", rs.getInt("room_id")); // Note: View must select room_id if UI needs it
+                    row.put("reservation_id", rs.getInt("reservation_id"));
                     row.put("room_type", rs.getString("room_type"));
                     row.put("time_slot", rs.getTime("time_slot"));
                     row.put("reservation_date", toLocalDate(rs.getDate("reservation_date")));
                     row.put("Member_Name", rs.getString("Member_Name"));
+                    row.put("status", rs.getString("status"));
                     out.add(row);
                 }
                 return out;
@@ -503,6 +505,141 @@ public class LibraryAPI {
                 out.add(row);
             }
             return out;
+        }
+    }
+
+    /**
+     * Gets all loan details (for loan management panel)
+     */
+    public List<LoanDetailsRecord> getAllLoanDetails() throws SQLException {
+        String sql = "SELECT * FROM v_LoanDetails";
+        return getLoanDetailsList(sql, null);
+    }
+
+    /**
+     * Gets loans issued by a particular staff member
+     */
+    public List<LoanDetailsRecord> getLoansByStaff(int staffId) throws SQLException {
+        String sql = "SELECT * FROM v_LoanDetails WHERE staff_id = ?";
+        try (Connection conn = Database.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, staffId);
+            try (ResultSet rs = ps.executeQuery()) {
+                List<LoanDetailsRecord> out = new ArrayList<>();
+                while (rs.next()) {
+                    out.add(new LoanDetailsRecord(
+                            rs.getInt("loan_id"),
+                            rs.getInt("member_id"),
+                            rs.getString("Member_Name"),
+                            rs.getString("Member_Email"),
+                            rs.getString("Book_Title"),
+                            toLocalDate(rs.getDate("issue_date")),
+                            toLocalDate(rs.getDate("due_date")),
+                            toLocalDate(rs.getDate("return_date")),
+                            rs.getString("Loan_Status")));
+                }
+                return out;
+            }
+        }
+    }
+
+    /**
+     * Uses v_BookPopularity (View 4) - Total loans per book
+     */
+    public List<Map<String, Object>> getTotalLoansPerBook() throws SQLException {
+        String sql = "SELECT * FROM v_BookPopularity ORDER BY total_loans DESC";
+        try (Connection conn = Database.getConnection();
+                ResultSet rs = Database.executeQuery(conn, sql)) {
+            List<Map<String, Object>> out = new ArrayList<>();
+            while (rs.next()) {
+                Map<String, Object> row = new HashMap<>();
+                row.put("ISBN", rs.getString("isbn"));
+                row.put("Title", rs.getString("title"));
+                row.put("TotalLoans", rs.getInt("total_loans"));
+                out.add(row);
+            }
+            return out;
+        }
+    }
+
+    /**
+     * Gets all book reservations
+     */
+    public List<Map<String, Object>> getAllBookReservations() throws SQLException {
+        String sql = "SELECT * FROM v_AllReservations WHERE book_isbn IS NOT NULL";
+        try (Connection conn = Database.getConnection();
+                ResultSet rs = Database.executeQuery(conn, sql)) {
+            List<Map<String, Object>> out = new ArrayList<>();
+            while (rs.next()) {
+                Map<String, Object> row = new HashMap<>();
+                row.put("reservation_id", rs.getInt("reservation_id"));
+                row.put("member_id", rs.getInt("member_id"));
+                row.put("book_isbn", rs.getString("book_isbn"));
+                row.put("reservation_date", toLocalDate(rs.getDate("reservation_date")));
+                row.put("status", rs.getString("status"));
+                out.add(row);
+            }
+            return out;
+        }
+    }
+
+    /**
+     * Gets members who have reserved a book currently on loan
+     */
+    public List<Map<String, Object>> getMembersWithReservedBooksOnLoan() throws SQLException {
+        String sql = "SELECT r.reservation_id, r.member_id, r.book_isbn, " +
+                "CONCAT(m.Fname, ' ', m.Lname) AS member_name, r.status " +
+                "FROM Reservation r " +
+                "JOIN Member m ON r.member_id = m.member_id " +
+                "WHERE r.book_isbn IS NOT NULL " +
+                "AND r.status = 'Pending' " +
+                "AND EXISTS (SELECT 1 FROM Loan l " +
+                "            JOIN BookCopy bc ON l.copy_id = bc.copy_id " +
+                "            WHERE bc.isbn = r.book_isbn AND l.return_date IS NULL)";
+        try (Connection conn = Database.getConnection();
+                ResultSet rs = Database.executeQuery(conn, sql)) {
+            List<Map<String, Object>> out = new ArrayList<>();
+            while (rs.next()) {
+                Map<String, Object> row = new HashMap<>();
+                row.put("reservation_id", rs.getInt("reservation_id"));
+                row.put("member_id", rs.getInt("member_id"));
+                row.put("member_name", rs.getString("member_name"));
+                row.put("book_isbn", rs.getString("book_isbn"));
+                row.put("status", rs.getString("status"));
+                out.add(row);
+            }
+            return out;
+        }
+    }
+
+    /**
+     * Updates book information
+     */
+    public boolean updateBook(String isbn, String title, String author, String publisher,
+            String category, String edition) throws SQLException {
+        String sql = "UPDATE Book SET title = ?, author = ?, publisher = ?, category = ?, edition = ? WHERE isbn = ?";
+        try (Connection conn = Database.getConnection()) {
+            return Database.executeUpdate(conn, sql, title, author, publisher, category, edition, isbn) > 0;
+        }
+    }
+
+    /**
+     * Updates book copy shelf location
+     */
+    public boolean updateBookCopyLocation(int copyId, String shelfLocation) throws SQLException {
+        String sql = "UPDATE BookCopy SET shelf_location = ? WHERE copy_id = ?";
+        try (Connection conn = Database.getConnection()) {
+            return Database.executeUpdate(conn, sql, shelfLocation, copyId) > 0;
+        }
+    }
+
+    /**
+     * Updates reservation status
+     */
+    public boolean updateReservationStatus(int reservationId, String status) throws SQLException {
+        String sql = "UPDATE Reservation SET status = ? WHERE reservation_id = ?";
+        try (Connection conn = Database.getConnection()) {
+            return Database.executeUpdate(conn, sql, status, reservationId) > 0;
         }
     }
 
