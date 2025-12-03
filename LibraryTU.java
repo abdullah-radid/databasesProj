@@ -11,7 +11,7 @@ public class LibraryTU extends JFrame {
     // ===== DB CONFIG (change user/password if needed) =====
     private String url = "jdbc:mysql://localhost:3306/library_db";
     private String user = "root";
-    private String password = "12345678";
+    private String password; // Will be set via constructor parameter
 
     // ===== MEMBER FIELDS =====
     private JTextField memberIDField, memberFirstNameField, memberMiddleNameField,
@@ -42,7 +42,9 @@ public class LibraryTU extends JFrame {
     private JTextArea fineOutput;
 
     // ===== CONSTRUCTOR =====
-    public LibraryTU() {
+    public LibraryTU(String dbPassword) {
+        this.password = dbPassword;
+
         // Initialize database if it doesn't exist
         initializeDatabase();
 
@@ -1355,9 +1357,4 @@ public class LibraryTU extends JFrame {
         return DriverManager.getConnection(url, user, password);
     }
 
-    // ====================== MAIN ======================
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(LibraryTU::new);
-    }
 }

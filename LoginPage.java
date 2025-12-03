@@ -61,12 +61,39 @@ public class LoginPage extends JFrame {
             // Close login window
             dispose();
 
-            // Open your main DB GUI window
-            // Make sure LibraryTU has a no-arg constructor
-            new LibraryTU();
+            // Ask for MySQL database password
+            String dbPassword = promptForDatabasePassword();
+            if (dbPassword != null) {
+                // Open your main DB GUI window with the database password
+                new LibraryTU(dbPassword);
+            } else {
+                System.exit(0); // User cancelled, exit application
+            }
         } else {
             JOptionPane.showMessageDialog(this, "Invalid credentials.");
         }
+    }
+
+    private String promptForDatabasePassword() {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+
+        JLabel label = new JLabel("Enter MySQL root password:");
+        JPasswordField passField = new JPasswordField(20);
+
+        panel.add(label);
+        panel.add(Box.createVerticalStrut(10));
+        panel.add(passField);
+
+        int result = JOptionPane.showConfirmDialog(null, panel,
+                "Database Configuration",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE);
+
+        if (result == JOptionPane.OK_OPTION) {
+            return new String(passField.getPassword());
+        }
+        return null;
     }
 
     public static void main(String[] args) {
