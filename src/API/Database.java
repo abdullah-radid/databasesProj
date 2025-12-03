@@ -12,7 +12,7 @@ import java.util.List;
 public final class Database {
     private static final String URL = "jdbc:mysql://localhost:3306/library_db";
     private static final String USERNAME = "root";
-    private static final String PASSWORD = null; // set your password
+    private static final String PASSWORD = "COSC457"; // set your password
 
 
     /// Gets mysql connection using the privately set username and pass

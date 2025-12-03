@@ -2,7 +2,8 @@ package UI.Panels;
 
 import API.DTO.LoanDetailsRecord;
 import API.DTO.MemberRecord;
-import API.LibraryAPI;
+import API.LoansAPI;
+import API.MembersAPI;
 import UI.Utility;
 
 import javax.swing.*;
@@ -28,10 +29,9 @@ public class MembersPanel extends JPanel {
         topPanel.add(refreshBtn);
         topPanel.add(historyBtn);
 
-        // Filter by member type
         JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JLabel filterLabel = new JLabel("Filter by Type:");
-        JComboBox<String> typeFilter = new JComboBox<>(new String[]{"All", "Student", "Faculty", "Staff", "Public"});
+        JComboBox<String> typeFilter = new JComboBox<>(new String[]{"All", "Student", "Faculty", "Public"});
         filterPanel.add(filterLabel);
         filterPanel.add(typeFilter);
 
@@ -47,7 +47,7 @@ public class MembersPanel extends JPanel {
 
         refreshBtn.addActionListener(e -> refreshMemberTable(model, (String) typeFilter.getSelectedItem()));
         typeFilter.addActionListener(e -> refreshMemberTable(model, (String) typeFilter.getSelectedItem()));
-        refreshBtn.doClick();
+        refreshMemberTable(model, "All");
 
         addBtn.addActionListener(e -> showAddMemberDialog(this, model));
         updateBtn.addActionListener(e -> showUpdateMemberDialog(this, table, model));
@@ -64,15 +64,7 @@ public class MembersPanel extends JPanel {
 
     private static void refreshMemberTable(DefaultTableModel model, String memberType) {
         try {
-            java.util.List<MemberRecord> members;
-            if ("All".equals(memberType)) {
-                members = LibraryAPI.getMembersByType("Student");
-                members.addAll(LibraryAPI.getMembersByType("Faculty"));
-                members.addAll(LibraryAPI.getMembersByType("Staff"));
-                members.addAll(LibraryAPI.getMembersByType("Public"));
-            } else {
-                members = LibraryAPI.getMembersByType(memberType);
-            }
+            List<MemberRecord> members = MembersAPI.getMembers(memberType);
             model.setRowCount(0);
             for (MemberRecord member : members) {
                 model.addRow(new Object[]{
@@ -97,7 +89,7 @@ public class MembersPanel extends JPanel {
         JTextField fnameField = new JTextField(20);
         JTextField mnameField = new JTextField(20);
         JTextField lnameField = new JTextField(20);
-        JComboBox<String> typeCombo = new JComboBox<>(new String[]{"Student", "Faculty", "Staff", "Public"});
+        JComboBox<String> typeCombo = new JComboBox<>(new String[]{"Student", "Faculty", "Public"});
         JTextField emailField = new JTextField(20);
 
         int row = 0;
@@ -120,12 +112,12 @@ public class MembersPanel extends JPanel {
 
         saveBtn.addActionListener(e -> {
             try {
-                int memberId = LibraryAPI.createMember(
-                        fnameField.getText(),
-                        mnameField.getText(),
-                        lnameField.getText(),
+                int memberId = MembersAPI.createMember(
+                        fnameField.getText().trim(),
+                        mnameField.getText().trim(),
+                        lnameField.getText().trim(),
                         (String) typeCombo.getSelectedItem(),
-                        emailField.getText()
+                        emailField.getText().trim()
                 );
                 if (memberId > 0) {
                     JOptionPane.showMessageDialog(dialog, "Member added successfully! ID: " + memberId);
@@ -163,14 +155,12 @@ public class MembersPanel extends JPanel {
 
         JLabel idLabel = new JLabel("Member ID: " + memberId);
         JTextField emailField = new JTextField(email, 20);
-        JTextField phoneField = new JTextField(20);
 
         int row = 0;
         gbc.gridx = 0;
         gbc.gridy = row++;
         dialog.add(idLabel, gbc);
         Utility.addLabelAndField(dialog, gbc, "Email:", emailField, row++);
-        Utility.addLabelAndField(dialog, gbc, "Phone:", phoneField, row++);
 
         JButton saveBtn = new JButton("Save");
         JButton cancelBtn = new JButton("Cancel");
@@ -185,7 +175,7 @@ public class MembersPanel extends JPanel {
 
         saveBtn.addActionListener(e -> {
             try {
-                if (LibraryAPI.updateMemberContact(memberId, emailField.getText(), phoneField.getText())) {
+                if (MembersAPI.updateMemberContact(memberId, emailField.getText().trim())) {
                     JOptionPane.showMessageDialog(dialog, "Member updated successfully!");
                     dialog.dispose();
                     refreshMemberTable(model, "All");
@@ -226,7 +216,7 @@ public class MembersPanel extends JPanel {
         JScrollPane scrollPane = new JScrollPane(historyTable);
 
         try {
-            List<LoanDetailsRecord> loans = LibraryAPI.getLoanDetailsForMember(memberId);
+            List<LoanDetailsRecord> loans = LoansAPI.getLoanDetailsForMember(memberId);
             for (LoanDetailsRecord loan : loans) {
                 model.addRow(new Object[]{
                         loan.loanId(),

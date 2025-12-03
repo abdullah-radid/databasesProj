@@ -3,7 +3,7 @@ package UI.Panels;
 import API.BooksAPI;
 import API.DTO.BookInventoryRecord;
 import API.DTO.LoanDetailsRecord;
-import API.LibraryAPI;
+import API.LoansAPI;
 import UI.Utility;
 
 import javax.swing.*;
@@ -11,12 +11,13 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 public class LoansPanel extends JPanel {
-    private static int currentStaffId = 1; // Default staff ID for issuing books
-    // ==================== LOAN MANAGEMENT PANEL ====================
+
     public LoansPanel() {
-      super(new BorderLayout());
+        super(new BorderLayout());
 
         JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JButton issueBtn = new JButton("Issue Book");
@@ -41,23 +42,23 @@ public class LoansPanel extends JPanel {
         JTable table = new JTable(model);
         JScrollPane scrollPane = new JScrollPane(table);
 
-        refreshBtn.addActionListener(e -> refreshLoanTable(model));
+        refreshBtn.addActionListener(_ -> refreshLoanTable(model));
+        refreshLoanTable(model);
+
         issueBtn.addActionListener(e -> showIssueBookDialog(this, model));
         returnBtn.addActionListener(e -> showReturnBookDialog(this, table, model));
         renewBtn.addActionListener(e -> JOptionPane.showMessageDialog(this,
-                "Renewal functionality requires additional API methods.", "Not Implemented",
+                "Renewal Doesnt Exist Yet", "Not Implemented",
                 JOptionPane.INFORMATION_MESSAGE));
         checkAvailabilityBtn.addActionListener(e -> showCheckAvailabilityDialog(this));
 
         this.add(topPanel, BorderLayout.NORTH);
         this.add(scrollPane, BorderLayout.CENTER);
-
-
     }
 
     private static void refreshLoanTable(DefaultTableModel model) {
         try {
-            java.util.List<LoanDetailsRecord> loans = LibraryAPI.getAllLoanDetails();
+            List<LoanDetailsRecord> loans = LoansAPI.getAllLoanDetails();
             model.setRowCount(0);
             for (LoanDetailsRecord loan : loans) {
                 model.addRow(new Object[]{
@@ -85,13 +86,11 @@ public class LoansPanel extends JPanel {
         gbc.anchor = GridBagConstraints.WEST;
 
         JTextField memberIdField = new JTextField(20);
-        JTextField copyIdField = new JTextField(20);
-        JTextField staffIdField = new JTextField(String.valueOf(currentStaffId), 20);
+        JTextField isbnField = new JTextField(20);
 
         int row = 0;
         Utility.addLabelAndField(dialog, gbc, "Member ID:", memberIdField, row++);
-        Utility.addLabelAndField(dialog, gbc, "Copy ID:", copyIdField, row++);
-        Utility.addLabelAndField(dialog, gbc, "Staff ID:", staffIdField, row++);
+        Utility.addLabelAndField(dialog, gbc, "Book ISBN:", isbnField, row++);
 
         JButton issueBtn = new JButton("Issue");
         JButton cancelBtn = new JButton("Cancel");
@@ -106,18 +105,16 @@ public class LoansPanel extends JPanel {
 
         issueBtn.addActionListener(e -> {
             try {
-                int memberId = Integer.parseInt(memberIdField.getText());
-                int copyId = Integer.parseInt(copyIdField.getText());
-                int staffId = Integer.parseInt(staffIdField.getText());
-
-                String result = LibraryAPI.issueBook(memberId, copyId, staffId);
+                int memberId = Integer.parseInt(memberIdField.getText().trim());
+                String isbn = isbnField.getText().trim();
+                String result = LoansAPI.issueBook(memberId, isbn);
                 JOptionPane.showMessageDialog(dialog, result);
                 if (result.startsWith("Success")) {
                     dialog.dispose();
                     refreshLoanTable(model);
                 }
             } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(dialog, "Please enter valid numbers.",
+                JOptionPane.showMessageDialog(dialog, "Please enter a valid Member ID.",
                         "Invalid Input", JOptionPane.ERROR_MESSAGE);
             } catch (SQLException ex) {
                 JOptionPane.showMessageDialog(dialog, "Error issuing book: " + ex.getMessage(),
@@ -147,7 +144,7 @@ public class LoansPanel extends JPanel {
 
         if (confirm == JOptionPane.YES_OPTION) {
             try {
-                String result = LibraryAPI.returnBook(loanId);
+                String result = LoansAPI.returnBook(loanId);
                 JOptionPane.showMessageDialog(parent, result);
                 if (result.startsWith("Success")) {
                     refreshLoanTable(model);
@@ -162,7 +159,7 @@ public class LoansPanel extends JPanel {
     private static void showCheckAvailabilityDialog(JPanel parent) {
         JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(parent),
                 "Check Book Availability", true);
-        dialog.setSize(500, 400);
+        dialog.setSize(650, 420);
         dialog.setLayout(new BorderLayout());
 
         JPanel searchPanel = new JPanel(new FlowLayout());
@@ -172,7 +169,7 @@ public class LoansPanel extends JPanel {
         searchPanel.add(searchField);
         searchPanel.add(searchBtn);
 
-        String[] columns = {"ISBN", "Title", "Author", "Copy ID", "Location", "Status"};
+        String[] columns = {"ISBN", "Title", "Author", "Category", "Edition", "Active Loans", "Availability"};
         DefaultTableModel model = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -184,15 +181,25 @@ public class LoansPanel extends JPanel {
 
         searchBtn.addActionListener(e -> {
             try {
-                String searchText = searchField.getText();
+                String searchText = searchField.getText().trim().toLowerCase(Locale.ROOT);
                 List<BookInventoryRecord> books = BooksAPI.getAllBookInventory();
+                Map<String, Integer> activeCounts = LoansAPI.getActiveLoanCounts();
                 model.setRowCount(0);
                 for (BookInventoryRecord book : books) {
-                    if (book.title().toLowerCase().contains(searchText.toLowerCase()) ||
-                            book.isbn().contains(searchText)) {
+                    boolean matches = searchText.isEmpty()
+                            || book.title().toLowerCase(Locale.ROOT).contains(searchText)
+                            || book.isbn().toLowerCase(Locale.ROOT).contains(searchText);
+                    if (matches) {
+                        int active = activeCounts.getOrDefault(book.isbn(), 0);
+                        String availability = active == 0 ? "Available" : "On Loan";
                         model.addRow(new Object[]{
-                                book.isbn(), book.title(), book.author(),
-                                book.copyId(), book.location(), book.status()
+                                book.isbn(),
+                                book.title(),
+                                book.author(),
+                                book.category(),
+                                book.edition(),
+                                active,
+                                availability
                         });
                     }
                 }

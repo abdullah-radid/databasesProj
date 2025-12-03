@@ -1,6 +1,6 @@
 package UI.Panels;
 
-import API.LibraryAPI;
+import API.FinesAPI;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -36,7 +36,7 @@ public class FinesPanel extends JPanel {
 
         calculateBtn.addActionListener(e -> {
             try {
-                LibraryAPI.calculateOverdueFines();
+                FinesAPI.calculateOverdueFines();
                 JOptionPane.showMessageDialog(this, "Fines calculated for books overdue 75+ days.");
                 refreshFineTable(model);
             } catch (SQLException ex) {
@@ -45,8 +45,10 @@ public class FinesPanel extends JPanel {
             }
         });
 
-        viewUnpaidBtn.addActionListener(e -> refreshUnpaidFinesTable(model));
+        viewUnpaidBtn.addActionListener(e -> refreshFineTable(model));
         refreshBtn.addActionListener(e -> refreshFineTable(model));
+
+        refreshFineTable(model);
 
         this.add(topPanel, BorderLayout.NORTH);
         this.add(scrollPane, BorderLayout.CENTER);
@@ -54,23 +56,19 @@ public class FinesPanel extends JPanel {
 
     private static void refreshFineTable(DefaultTableModel model) {
         try {
-            List<Map<String, Object>> fines = LibraryAPI.getMembersWithUnpaidFines();
+            List<Map<String, Object>> fines = FinesAPI.getMembersWithUnpaidFines();
             model.setRowCount(0);
             for (Map<String, Object> fine : fines) {
                 model.addRow(new Object[]{
                         fine.get("MemberName"),
                         fine.get("amount"),
                         fine.get("applied_date"),
-                        "Unpaid"
+                        fine.get("status")
                 });
             }
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(null, "Error loading fines: " + e.getMessage(),
                     "Error", JOptionPane.ERROR_MESSAGE);
         }
-    }
-
-    private static void refreshUnpaidFinesTable(DefaultTableModel model) {
-        refreshFineTable(model);
     }
 }

@@ -1,7 +1,9 @@
 package UI.Panels;
 
 import API.DTO.LoanDetailsRecord;
-import API.LibraryAPI;
+import API.FinesAPI;
+import API.LoansAPI;
+import API.ReportsAPI;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -13,7 +15,7 @@ import java.util.Map;
 import java.util.Optional;
 
 public class ReportsPanel extends JPanel {
-    // ==================== REPORTS PANEL ====================
+
     public ReportsPanel() {
         super(new BorderLayout());
 
@@ -30,8 +32,7 @@ public class ReportsPanel extends JPanel {
         topPanel.add(neverBorrowedBtn);
         topPanel.add(totalLoansBtn);
 
-        String[] columns = {"Column 1", "Column 2", "Column 3"};
-        DefaultTableModel model = new DefaultTableModel(columns, 0) {
+        DefaultTableModel model = new DefaultTableModel(new Object[]{"Column 1", "Column 2"}, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
@@ -42,7 +43,7 @@ public class ReportsPanel extends JPanel {
 
         mostBorrowedBtn.addActionListener(e -> {
             try {
-                Optional<Map.Entry<String, Integer>> result = LibraryAPI.getMostBorrowedBookLastQuarter();
+                Optional<Map.Entry<String, Integer>> result = ReportsAPI.getMostBorrowedBookLastQuarter();
                 model.setColumnCount(2);
                 model.setColumnIdentifiers(new String[]{"Book Title", "Borrow Count"});
                 model.setRowCount(0);
@@ -59,7 +60,7 @@ public class ReportsPanel extends JPanel {
 
         overdueBtn.addActionListener(e -> {
             try {
-                java.util.List<LoanDetailsRecord> overdue = LibraryAPI.getOverdueLoans();
+                List<LoanDetailsRecord> overdue = LoansAPI.getOverdueLoans();
                 model.setColumnCount(6);
                 model.setColumnIdentifiers(new String[]{"Loan ID", "Member Name", "Book Title",
                         "Issue Date", "Due Date", "Days Overdue"});
@@ -84,7 +85,7 @@ public class ReportsPanel extends JPanel {
 
         finesReportBtn.addActionListener(e -> {
             try {
-                java.util.List<Map<String, Object>> fines = LibraryAPI.getFinesLastQuarter();
+                List<Map<String, Object>> fines = FinesAPI.getFinesLastQuarter();
                 model.setColumnCount(3);
                 model.setColumnIdentifiers(new String[]{"Member Name", "Amount", "Applied Date"});
                 model.setRowCount(0);
@@ -103,7 +104,7 @@ public class ReportsPanel extends JPanel {
 
         neverBorrowedBtn.addActionListener(e -> {
             try {
-                java.util.List<Map<String, Object>> books = LibraryAPI.getBooksNeverBorrowed();
+                List<Map<String, Object>> books = ReportsAPI.getBooksNeverBorrowed();
                 model.setColumnCount(3);
                 model.setColumnIdentifiers(new String[]{"Title", "ISBN", "Author"});
                 model.setRowCount(0);
@@ -122,7 +123,7 @@ public class ReportsPanel extends JPanel {
 
         totalLoansBtn.addActionListener(e -> {
             try {
-                List<Map<String, Object>> books = LibraryAPI.getTotalLoansPerBook();
+                List<Map<String, Object>> books = ReportsAPI.getTotalLoansPerBook();
                 model.setColumnCount(3);
                 model.setColumnIdentifiers(new String[]{"ISBN", "Title", "Total Loans"});
                 model.setRowCount(0);
@@ -141,8 +142,5 @@ public class ReportsPanel extends JPanel {
 
         this.add(topPanel, BorderLayout.NORTH);
         this.add(scrollPane, BorderLayout.CENTER);
-
     }
-
-
 }
