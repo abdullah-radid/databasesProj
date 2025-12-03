@@ -3,15 +3,13 @@ CREATE DATABASE library_db;
 USE library_db;
 
 
--- exists to track who processes loans
 CREATE TABLE Staff (
     staff_id INT AUTO_INCREMENT PRIMARY KEY,
-    Fname VARCHAR(50) NOT NULL,
+    Fname VARCHAR(50) NOT NULL, -- didnt change to match erd
     Lname VARCHAR(50) NOT NULL,
     email VARCHAR(100) UNIQUE
 );
 
--- Tracks students, faculty, and staff members
 CREATE TABLE Member (
     member_id INT AUTO_INCREMENT PRIMARY KEY,
     Fname VARCHAR(50) NOT NULL,
@@ -25,13 +23,10 @@ CREATE TABLE Member (
 CREATE TABLE Room (
     room_id INT AUTO_INCREMENT PRIMARY KEY,
     capacity INT NOT NULL,
-    room_type VARCHAR(50) NOT NULL -- was multivalue in ERD
+    room_type VARCHAR(50) NOT NULL -- was multivalue in ERD roomtype to follow  erd
 );
-CREATE TABLE Room (
-    room_id INT PRIMARY KEY AUTO_INCREMENT,
-    room_name VARCHAR(50),
-    capacity INT
-);
+
+
 
 -- Metadata for the books
 CREATE TABLE Book (
@@ -69,20 +64,6 @@ CREATE TABLE Fine (
     FOREIGN KEY (loan_id) REFERENCES Loan(loan_id), -- Links to the specific Loan transaction
 );
 
-
--- Handles reservations for both Books and Rooms
-CREATE TABLE Reservation (
-    reservation_id INT AUTO_INCREMENT PRIMARY KEY,
-    member_id INT,
-    room_id INT DEFAULT NULL,           -- Populated if reserving a room
-    book_isbn VARCHAR(20) DEFAULT NULL, -- Populated if reserving a book
-    reservation_date DATE NOT NULL,
-    time_slot TIME,                     -- Only needed for rooms
-    status ENUM('Pending', 'Fulfilled', 'Cancelled') DEFAULT 'Pending',
-    FOREIGN KEY (member_id) REFERENCES Member(member_id),
-    FOREIGN KEY (room_id) REFERENCES Room(room_id),
-    FOREIGN KEY (book_isbn) REFERENCES Book(isbn)
-);
 
 -- for faster "Find all books by specific author"
 CREATE INDEX idx_book_author ON Book(author);
