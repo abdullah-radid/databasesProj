@@ -8,44 +8,44 @@ import java.util.List;
 
 public class LibraryTU extends JFrame {
 
-    // ===== DB CONFIG (change user/password if needed) =====
+    
     private String url = "jdbc:mysql://localhost:3306/library_db";
     private String user = "root";
-    private String password; // Will be set via constructor parameter
+    private String password; 
 
-    // ===== MEMBER FIELDS =====
+    // Members Fields
     private JTextField memberIDField, memberFirstNameField, memberMiddleNameField,
             memberLastNameField, memberTypeField, memberContactInfoField;
     private JTextArea memberOutput;
 
-    // ===== STAFF FIELDS =====
+    // Staff Fields
     private JTextField staffIDField, staffFirstNameField, staffLastNameField, staffContactInfoField;
     private JTextArea staffOutput;
 
-    // ===== ROOM FIELDS =====
+    // Room Fields
     private JTextField roomIDField, roomNameField, roomCapacityField;
     private JTextArea roomOutput;
 
-    // ===== BOOK FIELDS =====
+    // Book Fields
     private JTextField bookIsbnField, bookTitleField, bookAuthorField,
             bookPublisherField, bookCategoryField, bookEditionField;
     private JTextArea bookOutput;
 
-    // ===== LOAN FIELDS (uses isbn) =====
+    // Loan Fields
     private JTextField loanIDField, loanMemberIDField, loanIsbnField,
             loanIssueDateField, loanDueDateField, loanReturnDateField;
     private JTextArea loanOutput;
 
-    // ===== FINE FIELDS =====
+    // Fine Fields
     private JTextField fineIDField, fineLoanIDField, fineAmountField,
             fineStatusField, fineAppliedDateField;
     private JTextArea fineOutput;
 
-    // ===== CONSTRUCTOR =====
+    
     public LibraryTU(String dbPassword) {
         this.password = dbPassword;
 
-        // Initialize database if it doesn't exist
+        
         initializeDatabase();
 
         setTitle("Towson Library DB");
@@ -68,7 +68,7 @@ public class LibraryTU extends JFrame {
         setVisible(true);
     }
 
-    // ====================== GENERIC VIEW HELPER ======================
+   
 
     private void viewTable(String tableName, JTextArea targetArea) {
         targetArea.setText("");
@@ -85,14 +85,14 @@ public class LibraryTU extends JFrame {
             String[] header = new String[colCount];
             int[] widths = new int[colCount];
 
-            // headers
+            
             for (int i = 0; i < colCount; i++) {
                 header[i] = md.getColumnLabel(i + 1);
                 widths[i] = header[i].length();
             }
             rows.add(header);
 
-            // data rows + track max width
+            
             while (rs.next()) {
                 String[] row = new String[colCount];
                 for (int i = 0; i < colCount; i++) {
@@ -107,11 +107,11 @@ public class LibraryTU extends JFrame {
                 rows.add(row);
             }
 
-            // build padded text
+            
             StringBuilder sb = new StringBuilder();
             for (String[] row : rows) {
                 for (int i = 0; i < colCount; i++) {
-                    sb.append(padRight(row[i], widths[i] + 2)); // +2 spaces
+                    sb.append(padRight(row[i], widths[i] + 2)); 
                 }
                 sb.append("\n");
             }
@@ -135,7 +135,7 @@ public class LibraryTU extends JFrame {
         return sb.toString();
     }
 
-    // ====================== MEMBER TAB ======================
+    // Members tab
 
     private JPanel createMemberTab() {
         JPanel panel = new JPanel(new BorderLayout());
@@ -281,7 +281,7 @@ public class LibraryTU extends JFrame {
         }
     }
 
-    // ====================== STAFF TAB ======================
+    // Staff tabs
 
     private JPanel createStaffTab() {
         JPanel panel = new JPanel(new BorderLayout());
@@ -402,7 +402,7 @@ public class LibraryTU extends JFrame {
         }
     }
 
-    // ====================== ROOM TAB ======================
+    // Room Tabs
 
     private JPanel createRoomTab() {
         JPanel panel = new JPanel(new BorderLayout());
@@ -528,7 +528,7 @@ public class LibraryTU extends JFrame {
         }
     }
 
-    // ====================== BOOK TAB ======================
+    // Book tabs
 
     private JPanel createBookTab() {
         JPanel panel = new JPanel(new BorderLayout());
@@ -688,7 +688,7 @@ public class LibraryTU extends JFrame {
         }
     }
 
-    // ====================== LOAN TAB (member_id + isbn) ======================
+    // Loan tabs
 
     private JPanel createLoanTab() {
         JPanel panel = new JPanel(new BorderLayout());
@@ -813,7 +813,7 @@ public class LibraryTU extends JFrame {
 
         try (Connection conn = getConn()) {
 
-            // FK check: member exists (if provided)
+            
             if (!memberID.isEmpty()) {
                 String memSql = "SELECT COUNT(*) FROM Member WHERE member_id = ?";
                 try (PreparedStatement memPs = conn.prepareStatement(memSql)) {
@@ -828,7 +828,7 @@ public class LibraryTU extends JFrame {
                 }
             }
 
-            // FK check: book exists
+           // check if book exist
             String bookSql = "SELECT COUNT(*) FROM Book WHERE isbn = ?";
             try (PreparedStatement bookPs = conn.prepareStatement(bookSql)) {
                 bookPs.setString(1, isbn);
@@ -841,7 +841,7 @@ public class LibraryTU extends JFrame {
                 }
             }
 
-            // validation: book not already on open loan
+            // check if book is already on loan
             String checkSql = "SELECT COUNT(*) FROM Loan WHERE isbn = ? AND return_date IS NULL";
             try (PreparedStatement checkPs = conn.prepareStatement(checkSql)) {
                 checkPs.setString(1, isbn);
@@ -951,7 +951,7 @@ public class LibraryTU extends JFrame {
 
         try (Connection conn = getConn()) {
 
-            // FK check: member exists (if provided)
+         
             if (!memberID.isEmpty()) {
                 String memSql = "SELECT COUNT(*) FROM Member WHERE member_id = ?";
                 try (PreparedStatement memPs = conn.prepareStatement(memSql)) {
@@ -966,7 +966,7 @@ public class LibraryTU extends JFrame {
                 }
             }
 
-            // FK check: book exists
+            
             String bookSql = "SELECT COUNT(*) FROM Book WHERE isbn = ?";
             try (PreparedStatement bookPs = conn.prepareStatement(bookSql)) {
                 bookPs.setString(1, isbn);
@@ -979,7 +979,7 @@ public class LibraryTU extends JFrame {
                 }
             }
 
-            // validation: book not already on open loan in another row
+            
             String checkSql = "SELECT COUNT(*) FROM Loan " +
                     "WHERE isbn = ? AND return_date IS NULL AND loan_id <> ?";
             try (PreparedStatement checkPs = conn.prepareStatement(checkSql)) {
@@ -1042,7 +1042,7 @@ public class LibraryTU extends JFrame {
         }
     }
 
-    // ====================== FINE TAB ======================
+    // Fine tab 
 
     private JPanel createFineTab() {
         JPanel panel = new JPanel(new BorderLayout());
@@ -1208,35 +1208,28 @@ public class LibraryTU extends JFrame {
         }
     }
 
-    // ====================== DB CONNECTION ======================
-
-    // ====================== DATABASE INITIALIZATION ======================
-
-    /**
-     * Initialize database if it doesn't exist.
-     * Creates the library_db database, all tables, and inserts sample data.
-     */
+    // initialize database
     private void initializeDatabase() {
         try {
-            // Connect without specifying database to check if it exists
+            
             String baseUrl = "jdbc:mysql://localhost:3306/";
             Class.forName("com.mysql.cj.jdbc.Driver");
 
             try (Connection conn = DriverManager.getConnection(baseUrl, user, password);
                     Statement stmt = conn.createStatement()) {
 
-                // Check if database exists
+                
                 ResultSet rs = stmt.executeQuery("SHOW DATABASES LIKE 'library_db'");
                 if (!rs.next()) {
-                    // Database doesn't exist, create it
+                    
                     System.out.println("Creating library_db database...");
                     stmt.executeUpdate("CREATE DATABASE library_db");
                     stmt.executeUpdate("USE library_db");
 
-                    // Create tables
+                    
                     createTables(stmt);
 
-                    // Insert sample data
+                   
                     insertSampleData(stmt);
 
                     JOptionPane.showMessageDialog(this,
@@ -1258,7 +1251,7 @@ public class LibraryTU extends JFrame {
     }
 
     private void createTables(Statement stmt) throws Exception {
-        // Create Member table
+        // Member table
         stmt.executeUpdate("CREATE TABLE Member (" +
                 "member_id INT PRIMARY KEY AUTO_INCREMENT, " +
                 "first_name VARCHAR(50) NOT NULL, " +
@@ -1267,20 +1260,20 @@ public class LibraryTU extends JFrame {
                 "member_type VARCHAR(20) NOT NULL, " +
                 "contact_info VARCHAR(100) NOT NULL)");
 
-        // Create Staff table
+        // Cstaff table
         stmt.executeUpdate("CREATE TABLE Staff (" +
                 "staff_id INT PRIMARY KEY AUTO_INCREMENT, " +
                 "first_name VARCHAR(50) NOT NULL, " +
                 "last_name VARCHAR(50) NOT NULL, " +
                 "contact_info VARCHAR(100) NOT NULL)");
 
-        // Create Room table
+        // Room table
         stmt.executeUpdate("CREATE TABLE Room (" +
                 "room_id INT PRIMARY KEY AUTO_INCREMENT, " +
                 "room_name VARCHAR(50), " +
                 "capacity INT)");
 
-        // Create Book table
+        // Book table
         stmt.executeUpdate("CREATE TABLE Book (" +
                 "isbn VARCHAR(20) PRIMARY KEY, " +
                 "title VARCHAR(100) NOT NULL, " +
@@ -1289,7 +1282,7 @@ public class LibraryTU extends JFrame {
                 "category VARCHAR(50), " +
                 "edition VARCHAR(20))");
 
-        // Create Loan table
+        // Loan table
         stmt.executeUpdate("CREATE TABLE Loan (" +
                 "loan_id INT PRIMARY KEY AUTO_INCREMENT, " +
                 "member_id INT, " +
@@ -1300,7 +1293,7 @@ public class LibraryTU extends JFrame {
                 "FOREIGN KEY (member_id) REFERENCES Member(member_id), " +
                 "FOREIGN KEY (isbn) REFERENCES Book(isbn))");
 
-        // Create Fine table
+        // Fine table
         stmt.executeUpdate("CREATE TABLE Fine (" +
                 "fine_id INT PRIMARY KEY AUTO_INCREMENT, " +
                 "loan_id INT, " +
@@ -1311,9 +1304,10 @@ public class LibraryTU extends JFrame {
 
         System.out.println("Tables created successfully.");
     }
-
+    
+        // Sample data 
     private void insertSampleData(Statement stmt) throws Exception {
-        // Insert Members
+        // Sample members
         stmt.executeUpdate(
                 "INSERT INTO Member (first_name, middle_name, last_name, member_type, contact_info) VALUES " +
                         "('Jonathan', 'D.', 'Edwards', 'Student', 'jedwards@towson.edu'), " +
@@ -1321,36 +1315,36 @@ public class LibraryTU extends JFrame {
                         "('Landon', 'B.', 'Lastname', 'Student', 'landon@towson.edu'), " +
                         "('Dr.', 'Jane', 'Professor', 'Teacher', 'jane@towson.edu')");
 
-        // Insert Staff
+        // Sample staff
         stmt.executeUpdate("INSERT INTO Staff (first_name, last_name, contact_info) VALUES " +
                 "('Alice', 'Librarian', 'desk@library.edu'), " +
                 "('Bob', 'Manager', 'manager@library.edu')");
 
-        // Insert Rooms
+        // Sample rooms
         stmt.executeUpdate("INSERT INTO Room (room_name, capacity) VALUES " +
                 "('Study Room 101', 4), " +
                 "('Study Room 102', 6), " +
                 "('Computer Lab A', 30)");
 
-        // Insert Books
+        // Sample books
         stmt.executeUpdate("INSERT INTO Book (isbn, title, author, publisher, category, edition) VALUES " +
                 "('978-013376', 'Java: A Beginner Guide', 'Herbert Schildt', 'Oracle Press', 'Technology', '8th'), " +
                 "('978-032112', 'Database Systems', 'C.J. Date', 'Pearson', 'Education', '6th'), " +
                 "('978-054400', 'The Hobbit', 'J.R.R. Tolkien', 'Mariner Books', 'Fiction', '1st')");
 
-        // Insert Loans
+        // Sample loans
         stmt.executeUpdate("INSERT INTO Loan (member_id, isbn, issue_date, due_date, return_date) VALUES " +
                 "(1, '978-013376', '2025-10-01', '2025-10-15', NULL), " +
                 "(2, '978-032112', '2025-09-01', '2025-09-15', '2025-12-01')");
 
-        // Insert Fines
+        // Sample fines
         stmt.executeUpdate("INSERT INTO Fine (loan_id, amount, status, applied_date) VALUES " +
                 "(2, 15.00, 'Unpaid', '2025-12-01')");
 
         System.out.println("Sample data inserted successfully.");
     }
 
-    // ====================== DATABASE CONNECTION ======================
+   
 
     private Connection getConn() throws Exception {
         Class.forName("com.mysql.cj.jdbc.Driver");
@@ -1358,3 +1352,4 @@ public class LibraryTU extends JFrame {
     }
 
 }
+
