@@ -1,8 +1,6 @@
 package API;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * DB helper for MySQL using DriverManager.
@@ -14,7 +12,6 @@ public final class Database {
     private static final String USERNAME = null;
     private static final String PASSWORD = null; // set your password
 
-
     /// Gets mysql connection using the privately set username and pass
     public static Connection getConnection() throws SQLException {
         if (USERNAME == null) System.err.println("You didnt set your database USERNAME in Database.java");
@@ -24,8 +21,7 @@ public final class Database {
 
     /**
      * Tests database connection.
-     * @return true if all good
-     * @throws SQLException if theres a problem connected to the db <br>
+     * @return true if all good and false if theres a problem
      * If there is then make sure mysql is running, and make sure you set USERNAME and PASSWORD in this file
      */
     public static boolean testConnection() {
@@ -54,9 +50,6 @@ public final class Database {
         }
     }
 
-    public static CallableStatement prepareCall(Connection conn, String callSql) throws SQLException {
-        return conn.prepareCall(callSql);
-    }
 
     private static void setParams(PreparedStatement ps, Object... params) throws SQLException {
         if (params == null) return;
