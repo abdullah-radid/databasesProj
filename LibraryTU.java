@@ -6,12 +6,14 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+//GUII usnG Swing utilizing a MySQL DB
 public class LibraryTU extends JFrame {
 
     
+    //Connection info
     private String url = "jdbc:mysql://localhost:3306/library_db";
     private String user = "root";
-    private String password; 
+    private String password; //this is passed in 
 
     // Members Fields
     private JTextField memberIDField, memberFirstNameField, memberMiddleNameField,
@@ -36,16 +38,18 @@ public class LibraryTU extends JFrame {
             loanIssueDateField, loanDueDateField, loanReturnDateField;
     private JTextArea loanOutput;
 
-    // Fine Fields
+    // Fine Fields 
     private JTextField fineIDField, fineLoanIDField, fineAmountField,
             fineStatusField, fineAppliedDateField;
     private JTextArea fineOutput;
 
-    
+
+    //Constructor
     public LibraryTU(String dbPassword) {
+        //password to be used in all DB connections
         this.password = dbPassword;
 
-        
+        //create DB and tables if they dont exist yet
         initializeDatabase();
 
         setTitle("Towson Library DB");
@@ -53,8 +57,10 @@ public class LibraryTU extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
+        //pane holds 1 tab per tab entity like member
         JTabbedPane tabs = new JTabbedPane();
 
+        //adds all the taabs
         tabs.addTab("Member", createMemberTab());
         tabs.addTab("Staff", createStaffTab());
         tabs.addTab("Room", createRoomTab());
@@ -70,7 +76,9 @@ public class LibraryTU extends JFrame {
 
    
 
+    //helper method to display contens of given table using JTextArea
     private void viewTable(String tableName, JTextArea targetArea) {
+        
         targetArea.setText("");
         String sql = "SELECT * FROM " + tableName;
 
@@ -81,18 +89,19 @@ public class LibraryTU extends JFrame {
             ResultSetMetaData md = rs.getMetaData();
             int colCount = md.getColumnCount();
 
+            // rows will store header row + all data rows
             List<String[]> rows = new ArrayList<>();
             String[] header = new String[colCount];
-            int[] widths = new int[colCount];
+            int[] widths = new int[colCount];// storwes max width of each column for alignment
 
-            
             for (int i = 0; i < colCount; i++) {
                 header[i] = md.getColumnLabel(i + 1);
-                widths[i] = header[i].length();
+                widths[i] = header[i].length(); 
             }
             rows.add(header);
 
-            
+            // Read all rows from result set and track maximum width per column
+
             while (rs.next()) {
                 String[] row = new String[colCount];
                 for (int i = 0; i < colCount; i++) {
@@ -107,7 +116,7 @@ public class LibraryTU extends JFrame {
                 rows.add(row);
             }
 
-            
+            //text representation
             StringBuilder sb = new StringBuilder();
             for (String[] row : rows) {
                 for (int i = 0; i < colCount; i++) {
@@ -123,6 +132,7 @@ public class LibraryTU extends JFrame {
         }
     }
 
+    //Pads a string with spaces on the right so all columns line up.
     private String padRight(String text, int width) {
         if (text == null)
             text = "";
@@ -135,8 +145,7 @@ public class LibraryTU extends JFrame {
         return sb.toString();
     }
 
-    // Members tab
-
+    // Members tab, includes input fields, output area, and buttons
     private JPanel createMemberTab() {
         JPanel panel = new JPanel(new BorderLayout());
 
@@ -194,6 +203,7 @@ public class LibraryTU extends JFrame {
         return panel;
     }
 
+    //Iinserts a new Member record into the database.
     private void addMember() {
         String first = memberFirstNameField.getText().trim();
         String middle = memberMiddleNameField.getText().trim();
@@ -201,6 +211,7 @@ public class LibraryTU extends JFrame {
         String type = memberTypeField.getText().trim();
         String contact = memberContactInfoField.getText().trim();
 
+                    // If middle name is left blank, store SQL NULL instead of empty string
         String sql = "INSERT INTO Member (first_name, middle_name, last_name, member_type, contact_info) " +
                 "VALUES (?, ?, ?, ?, ?)";
 
@@ -224,6 +235,7 @@ public class LibraryTU extends JFrame {
         }
     }
 
+    //update existing member based on member id
     private void updateMember() {
         String idText = memberIDField.getText().trim();
         if (idText.isEmpty()) {
@@ -261,6 +273,7 @@ public class LibraryTU extends JFrame {
         }
     }
 
+    //Deletes a Member row by member_id
     private void removeMember() {
         String idText = memberIDField.getText().trim();
         if (idText.isEmpty()) {
@@ -282,7 +295,6 @@ public class LibraryTU extends JFrame {
     }
 
     // Staff tabs
-
     private JPanel createStaffTab() {
         JPanel panel = new JPanel(new BorderLayout());
 
@@ -331,6 +343,7 @@ public class LibraryTU extends JFrame {
         return panel;
     }
 
+    //adds staff
     private void addStaff() {
         String first = staffFirstNameField.getText().trim();
         String last = staffLastNameField.getText().trim();
@@ -353,6 +366,7 @@ public class LibraryTU extends JFrame {
         }
     }
 
+    //updates staff using staff id
     private void updateStaff() {
         String idText = staffIDField.getText().trim();
         if (idText.isEmpty()) {
@@ -382,6 +396,7 @@ public class LibraryTU extends JFrame {
         }
     }
 
+    //deletes staff record using id
     private void removeStaff() {
         String idText = staffIDField.getText().trim();
         if (idText.isEmpty()) {
@@ -403,7 +418,6 @@ public class LibraryTU extends JFrame {
     }
 
     // Room Tabs
-
     private JPanel createRoomTab() {
         JPanel panel = new JPanel(new BorderLayout());
 
@@ -448,6 +462,7 @@ public class LibraryTU extends JFrame {
         return panel;
     }
 
+    //adds a room, stored as NULL if blank
     private void addRoom() {
         String name = roomNameField.getText().trim();
         String capText = roomCapacityField.getText().trim();
@@ -474,6 +489,7 @@ public class LibraryTU extends JFrame {
         }
     }
 
+    //updates room using room id
     private void updateRoom() {
         String idText = roomIDField.getText().trim();
         if (idText.isEmpty()) {
@@ -507,6 +523,7 @@ public class LibraryTU extends JFrame {
         }
     }
 
+    //deletes room by id
     private void removeRoom() {
         String idText = roomIDField.getText().trim();
         if (idText.isEmpty()) {
@@ -528,8 +545,7 @@ public class LibraryTU extends JFrame {
         }
     }
 
-    // Book tabs
-
+    // Book tab
     private JPanel createBookTab() {
         JPanel panel = new JPanel(new BorderLayout());
 
@@ -586,6 +602,8 @@ public class LibraryTU extends JFrame {
         return panel;
     }
 
+    //adss book usinf ISBN
+    //some fields are optional like publisher, category, edition
     private void addBook() {
         String isbn = bookIsbnField.getText().trim();
         String title = bookTitleField.getText().trim();
@@ -624,6 +642,7 @@ public class LibraryTU extends JFrame {
         }
     }
 
+    //updates book using ISBN
     private void updateBook() {
         String isbn = bookIsbnField.getText().trim();
         if (isbn.isEmpty()) {
@@ -667,6 +686,7 @@ public class LibraryTU extends JFrame {
         }
     }
 
+    //deletes book
     private void removeBook() {
         String isbn = bookIsbnField.getText().trim();
         if (isbn.isEmpty()) {
@@ -689,7 +709,6 @@ public class LibraryTU extends JFrame {
     }
 
     // Loan tabs
-
     private JPanel createLoanTab() {
         JPanel panel = new JPanel(new BorderLayout());
 
@@ -746,6 +765,13 @@ public class LibraryTU extends JFrame {
         return panel;
     }
 
+    //adds loans (validation)
+    // issue date and due date must be provided and valid
+    // issue date cannot be todat (not implemented correctly)
+    // issue date < due date
+    // return date cannot be before issue date if provided
+    // member id must exist if provided
+    // isbn must exist and must not already be on loan
     private void addLoan() {
         String memberID = loanMemberIDField.getText().trim();
         String isbn = loanIsbnField.getText().trim();
@@ -770,6 +796,7 @@ public class LibraryTU extends JFrame {
         LocalDate dueLocal;
         LocalDate retLocal = null;
 
+        //parses issue date
         try {
             issueLocal = LocalDate.parse(issue);
         } catch (Exception ex) {
@@ -777,6 +804,7 @@ public class LibraryTU extends JFrame {
             return;
         }
 
+        //parses due date
         try {
             dueLocal = LocalDate.parse(due);
         } catch (Exception ex) {
@@ -784,6 +812,7 @@ public class LibraryTU extends JFrame {
             return;
         }
 
+        //parse return date iff provided
         if (!ret.isEmpty()) {
             try {
                 retLocal = LocalDate.parse(ret);
@@ -795,6 +824,7 @@ public class LibraryTU extends JFrame {
 
         LocalDate today = LocalDate.now();
 
+        //date logic rules
         if (issueLocal.equals(today)) {
             loanOutput.setText("Issue date cannot be today.");
             return;
@@ -813,7 +843,7 @@ public class LibraryTU extends JFrame {
 
         try (Connection conn = getConn()) {
 
-            
+                        // If member_id is provided, make sure that member exists
             if (!memberID.isEmpty()) {
                 String memSql = "SELECT COUNT(*) FROM Member WHERE member_id = ?";
                 try (PreparedStatement memPs = conn.prepareStatement(memSql)) {
@@ -854,6 +884,7 @@ public class LibraryTU extends JFrame {
                 }
             }
 
+            //if here, all valdiations passed, insert the record
             try (PreparedStatement ps = conn.prepareStatement(insertSql)) {
 
                 if (memberID.isEmpty())
@@ -879,6 +910,8 @@ public class LibraryTU extends JFrame {
         }
     }
 
+    //updates existing loan based on loan id with same validation
+    //logic as addLoan()
     private void updateLoan() {
         String idText = loanIDField.getText().trim();
         String memberID = loanMemberIDField.getText().trim();
@@ -951,7 +984,8 @@ public class LibraryTU extends JFrame {
 
         try (Connection conn = getConn()) {
 
-         
+
+            //validae memmebr id if provided
             if (!memberID.isEmpty()) {
                 String memSql = "SELECT COUNT(*) FROM Member WHERE member_id = ?";
                 try (PreparedStatement memPs = conn.prepareStatement(memSql)) {
@@ -966,7 +1000,7 @@ public class LibraryTU extends JFrame {
                 }
             }
 
-            
+            //validate that book exists
             String bookSql = "SELECT COUNT(*) FROM Book WHERE isbn = ?";
             try (PreparedStatement bookPs = conn.prepareStatement(bookSql)) {
                 bookPs.setString(1, isbn);
@@ -979,7 +1013,8 @@ public class LibraryTU extends JFrame {
                 }
             }
 
-            
+
+            //            // Ensure no other open loan record holds this book at the same time
             String checkSql = "SELECT COUNT(*) FROM Loan " +
                     "WHERE isbn = ? AND return_date IS NULL AND loan_id <> ?";
             try (PreparedStatement checkPs = conn.prepareStatement(checkSql)) {
@@ -994,6 +1029,7 @@ public class LibraryTU extends JFrame {
                 }
             }
 
+                        // Perform the actual update
             try (PreparedStatement ps = conn.prepareStatement(updateSql)) {
 
                 if (memberID.isEmpty())
@@ -1021,6 +1057,7 @@ public class LibraryTU extends JFrame {
         }
     }
 
+    //deletes a loan by loan id
     private void removeLoan() {
         String idText = loanIDField.getText().trim();
         if (idText.isEmpty()) {
@@ -1043,7 +1080,6 @@ public class LibraryTU extends JFrame {
     }
 
     // Fine tab 
-
     private JPanel createFineTab() {
         JPanel panel = new JPanel(new BorderLayout());
 
@@ -1096,6 +1132,8 @@ public class LibraryTU extends JFrame {
         return panel;
     }
 
+    //adds fine date
+    //Allows loan_id, amount, status, and applied_date to be null in GUI
     private void addFine() {
         String loanID = fineLoanIDField.getText().trim();
         String amountText = fineAmountField.getText().trim();
@@ -1138,6 +1176,7 @@ public class LibraryTU extends JFrame {
         }
     }
 
+    //based on fine id
     private void updateFine() {
         String idText = fineIDField.getText().trim();
         if (idText.isEmpty()) {
@@ -1187,6 +1226,7 @@ public class LibraryTU extends JFrame {
         }
     }
 
+    //removes based on id
     private void removeFine() {
         String idText = fineIDField.getText().trim();
         if (idText.isEmpty()) {
@@ -1209,6 +1249,7 @@ public class LibraryTU extends JFrame {
     }
 
     // initialize database
+    //if If the database already exists, it just prints a message and does nothing else.
     private void initializeDatabase() {
         try {
             
@@ -1346,10 +1387,12 @@ public class LibraryTU extends JFrame {
 
    
 
+    //Simple helper to get a Connection to library db using the configured user/pass.
     private Connection getConn() throws Exception {
         Class.forName("com.mysql.cj.jdbc.Driver");
         return DriverManager.getConnection(url, user, password);
     }
 
 }
+
 
