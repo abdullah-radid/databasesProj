@@ -14,8 +14,11 @@ public class MainPage extends JFrame {
 
         JTabbedPane tabbedPane = new JTabbedPane();
 
-        tabbedPane.addTab("Books", new BooksPanel());
         tabbedPane.addTab("Members", new MembersPanel());
+        tabbedPane.addTab("Staffs",new StaffPanel());
+        tabbedPane.addTab("Rooms",new RoomsPanel());
+        tabbedPane.addTab("Books", new BooksPanel());
+
         tabbedPane.addTab("Loans", new LoansPanel());
         tabbedPane.addTab("Fines", new FinesPanel());
         tabbedPane.addTab("Reports", new ReportsPanel());

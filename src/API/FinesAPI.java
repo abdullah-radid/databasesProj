@@ -1,6 +1,7 @@
 package API;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -12,6 +13,18 @@ import java.util.Map;
  * Fines and penalty utilities.
  */
 public final class FinesAPI {
+
+    /// Manually add a fine to a loan
+    public static void addManualFine(int loanId, double amount) throws SQLException {
+        String sql = "INSERT INTO Fine (loan_id, amount, status, applied_date) VALUES (?, ?, 'Unpaid', CURDATE())";
+        try (Connection conn = Database.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, loanId);
+            ps.setDouble(2, amount);
+            ps.executeUpdate();
+        }
+    }
+
     public static void calculateOverdueFines() throws SQLException {
         String sql = """
                 INSERT INTO Fine (loan_id, amount, status, applied_date)
@@ -42,7 +55,7 @@ public final class FinesAPI {
 
     private static List<Map<String, Object>> fetchFines(String sql) throws SQLException {
         try (Connection conn = Database.getConnection();
-             ResultSet rs = Database.executeQuery(conn, sql)) {
+                ResultSet rs = Database.executeQuery(conn, sql)) {
             List<Map<String, Object>> rows = new ArrayList<>();
             while (rs.next()) {
                 Map<String, Object> row = new HashMap<>();

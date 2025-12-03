@@ -9,8 +9,15 @@ import java.sql.*;
 */
 public final class Database {
     private static final String URL = "jdbc:mysql://localhost:3306/library_db";
-    private static final String USERNAME = null;
-    private static final String PASSWORD = null; // set your password
+    private static String USERNAME = null;
+    private static String PASSWORD = null; // set your password
+
+
+
+    public static void SetLogin(String username, String password) {
+        USERNAME = username;
+        PASSWORD = password;
+    }
 
     /// Gets mysql connection using the privately set username and pass
     public static Connection getConnection() throws SQLException {
