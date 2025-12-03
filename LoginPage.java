@@ -3,7 +3,7 @@ import java.awt.event.*;
 
 public class LoginPage extends JFrame {
 
-    // Hardcoded root credentials
+    // Username and password
     private static final String ROOT_USERNAME = "root";
     private static final String ROOT_PASSWORD = "password123";
 
@@ -14,9 +14,9 @@ public class LoginPage extends JFrame {
         setTitle("Login Page");
         setSize(300, 200);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLayout(null); // absolute layout like your example
+        setLayout(null); 
 
-        // Username label and text field
+        // Username label
         JLabel userLabel = new JLabel("Username:");
         userLabel.setBounds(20, 20, 80, 25);
         add(userLabel);
@@ -25,7 +25,7 @@ public class LoginPage extends JFrame {
         userText.setBounds(100, 20, 160, 25);
         add(userText);
 
-        // Password label and password field
+        // Password label 
         JLabel passwordLabel = new JLabel("Password:");
         passwordLabel.setBounds(20, 60, 80, 25);
         add(passwordLabel);
@@ -39,7 +39,7 @@ public class LoginPage extends JFrame {
         loginButton.setBounds(100, 100, 80, 25);
         add(loginButton);
 
-        // Action listener for the button
+        // Button activation
         loginButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -47,7 +47,7 @@ public class LoginPage extends JFrame {
             }
         });
 
-        setLocationRelativeTo(null); // center on screen
+        setLocationRelativeTo(null); 
         setVisible(true);
     }
 
@@ -58,16 +58,16 @@ public class LoginPage extends JFrame {
         if (username.equals(ROOT_USERNAME) && password.equals(ROOT_PASSWORD)) {
             JOptionPane.showMessageDialog(this, "Login successful!");
 
-            // Close login window
+            
             dispose();
 
-            // Ask for MySQL database password
+            // MySQL login promt
             String dbPassword = promptForDatabasePassword();
             if (dbPassword != null) {
-                // Open your main DB GUI window with the database password
+                
                 new LibraryTU(dbPassword);
             } else {
-                System.exit(0); // User cancelled, exit application
+                System.exit(0); 
             }
         } else {
             JOptionPane.showMessageDialog(this, "Invalid credentials.");
@@ -100,3 +100,4 @@ public class LoginPage extends JFrame {
         SwingUtilities.invokeLater(() -> new LoginPage());
     }
 }
+
