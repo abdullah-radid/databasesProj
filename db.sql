@@ -23,7 +23,7 @@ CREATE TABLE Member (
 CREATE TABLE Room (
     room_id INT AUTO_INCREMENT PRIMARY KEY,
     capacity INT NOT NULL,
-    room_type VARCHAR(50) NOT NULL -- was multivalue in ERD roomtype to follow  erd
+    room_name VARCHAR(50) NOT NULL -- was multivalue in ERD, changed roomtype to follow  erd
 );
 
 
@@ -45,7 +45,7 @@ CREATE TABLE Loan (
     loan_id INT PRIMARY KEY AUTO_INCREMENT,
     member_id INT,
     isbn VARCHAR(20), -- CHANGED: Now uses ISBN instead of copy_id
-    issue_date DATE NOT NULL,
+    issue_date DATE DEFAULT (CURRENT_DATE()),
     due_date DATE NOT NULL,
     return_date DATE DEFAULT NULL, -- NULL means the book has not been returned yet
     FOREIGN KEY (member_id) REFERENCES Member(member_id),
@@ -92,7 +92,7 @@ INSERT INTO Member (Fname, Mname, Lname, member_type, email) VALUES
 ('Dr.', 'Jane', 'Professor', 'Faculty', 'jane@towson.edu'),
 ('Blessing','O.','Abumere','Student','babumer1@towson.edu');
 
-INSERT INTO Staff (Fname, last_name, contact_info) VALUES
+INSERT INTO Staff (Fname, Lname, email) VALUES
 ('Alice', 'Librarian', 'desk@library.edu'),
 ('Bob', 'Manager', 'manager@library.edu');
 
