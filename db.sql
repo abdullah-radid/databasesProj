@@ -22,11 +22,9 @@ CREATE TABLE Member (
 -- Tracks study rooms and labs
 CREATE TABLE Room (
     room_id INT AUTO_INCREMENT PRIMARY KEY,
-    capacity INT NOT NULL,
-    room_name VARCHAR(50) NOT NULL -- was multivalue in ERD, changed roomtype to follow  erd
+    capacity INT UNSIGNED NOT NULL,
+    room_name VARCHAR(50) NOT NULL -- was multivalue in ERD, changed to room_name cus it makes more sense
 );
-
-
 
 -- Metadata for the books
 CREATE TABLE Book (
@@ -45,7 +43,7 @@ CREATE TABLE Loan (
     loan_id INT PRIMARY KEY AUTO_INCREMENT,
     member_id INT,
     isbn VARCHAR(20), -- CHANGED: Now uses ISBN instead of copy_id
-    issue_date DATE DEFAULT (CURRENT_DATE()),
+    issue_date DATE NOT NULL,
     due_date DATE NOT NULL,
     return_date DATE DEFAULT NULL, -- NULL means the book has not been returned yet
     FOREIGN KEY (member_id) REFERENCES Member(member_id),
@@ -57,7 +55,7 @@ CREATE TABLE Loan (
 -- Tracks penalties for overdue items
 CREATE TABLE Fine (
     fine_id INT AUTO_INCREMENT PRIMARY KEY,
-    loan_id INT,  -- should probably be unique since single loan generates one fine record
+    loan_id INT,
     amount DECIMAL(10, 2) NOT NULL,
     status ENUM('Paid', 'Unpaid') DEFAULT 'Unpaid',
     applied_date DATE,
@@ -90,7 +88,8 @@ INSERT INTO Member (Fname, Mname, Lname, member_type, email) VALUES
 ('Saif', 'A.', 'Al-Name', 'Student', 'saif@towson.edu'),
 ('Landon', 'B.', 'Lastname', 'Student', 'landon@towson.edu'),
 ('Dr.', 'Jane', 'Professor', 'Faculty', 'jane@towson.edu'),
-('Blessing','O.','Abumere','Student','babumer1@towson.edu');
+('Blessing','O.','Abumere','Student','babumer1@towson.edu'),
+('Guest',NULL,'User','Public','guest@gmail.com');
 
 INSERT INTO Staff (Fname, Lname, email) VALUES
 ('Alice', 'Librarian', 'desk@library.edu'),
@@ -99,7 +98,8 @@ INSERT INTO Staff (Fname, Lname, email) VALUES
 INSERT INTO Room (room_name, capacity) VALUES
 ('Study Room 101', 4),
 ('Study Room 102', 6),
-('Computer Lab A', 30);
+('Computer Lab A', 30),
+('York Road 307',30);
 
 INSERT INTO Book (isbn, title, author, publisher, category, edition) VALUES
 ('978-013376', 'Java: A Beginner Guide', 'Herbert Schildt', 'Oracle Press', 'Technology', '8th'),
