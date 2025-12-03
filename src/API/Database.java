@@ -22,6 +22,20 @@ public final class Database {
         return DriverManager.getConnection(URL, USERNAME, PASSWORD);
     }
 
+    /**
+     * Tests database connection.
+     * @return true if all good
+     * @throws SQLException if theres a problem connected to the db <br>
+     * If there is then make sure mysql is running, and make sure you set USERNAME and PASSWORD in this file
+     */
+    public static boolean testConnection() {
+        try (Connection conn = Database.getConnection()) {
+            return conn != null && !conn.isClosed();
+        } catch (SQLException e) {
+            return false;
+        }
+    }
+
 
     /// @apiNote  close ResultSet and parent Connection
     public static ResultSet executeQuery(Connection conn, String sql, Object... params) throws SQLException {

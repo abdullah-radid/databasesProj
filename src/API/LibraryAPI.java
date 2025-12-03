@@ -10,149 +10,11 @@ import java.util.*;
  */
 public class LibraryAPI {
 
-    /**
-     * Tests database connection.
-     *
-     * @return true if all good
-     */
-    public boolean testConnection() {
-        try (Connection conn = Database.getConnection()) {
-            return conn != null && !conn.isClosed();
-        } catch (SQLException e) {
-            return false;
-        }
-    }
-
-    // Book / Catalog methods
-    /**
-     * Returns all books with their copy records using view v_BookInventory.
-     */
-    public List<BookInventoryRecord> getAllBookInventory() throws SQLException {
-        String sql = "SELECT * FROM v_BookInventory";
-        try (Connection conn = Database.getConnection();
-                ResultSet rs = Database.executeQuery(conn, sql)) {
-            return getBookInventoryRecords(rs);
-        }
-    }
-
-    /**
-     * Maps a ResultSet containing book inventory records into a List of
-     * BookInventoryRecord objects.
-     *
-     * @param rs The ResultSet containing book inventory records.
-     * @return A List of BookInventoryRecord objects.
-     * @throws SQLException if error
-     */
-    private List<BookInventoryRecord> getBookInventoryRecords(ResultSet rs) throws SQLException {
-        List<BookInventoryRecord> out = new ArrayList<>();
-        while (rs.next()) {
-            out.add(new BookInventoryRecord(
-                    rs.getString("isbn"),
-                    rs.getString("Title"),
-                    rs.getString("Author"),
-                    rs.getString("Category"),
-                    rs.getString("Edition"),
-                    rs.getInt("CopyID"),
-                    rs.getString("Location"),
-                    BookCopyRecord.BookCopyStatus.valueOf(rs.getString("Status"))));
-        }
-        return out;
-    }
-
-    /**
-     * Finds books by author using v_BookInventory view.
-     *
-     * @param authorLike - the author to search for
-     * @return a list of BookInventoryRecord objects
-     * @throws SQLException if error
-     */
-    public List<BookInventoryRecord> findBooksByAuthor(String authorLike) throws SQLException {
-        String sql = "SELECT * FROM v_BookInventory WHERE Author LIKE ?";
-        try (Connection conn = Database.getConnection();
-                PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, authorLike);
-            try (ResultSet rs = ps.executeQuery()) {
-                return mapBookInventory(rs);
-            }
-        }
-    }
-
-    public List<BookInventoryRecord> findBooksByCategory(String category) throws SQLException {
-        String sql = "SELECT * FROM v_BookInventory WHERE Category = ?";
-        try (Connection conn = Database.getConnection();
-                PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, category);
-            try (ResultSet rs = ps.executeQuery()) {
-                return mapBookInventory(rs);
-            }
-        }
-    }
-
-    private List<BookInventoryRecord> mapBookInventory(ResultSet rs) throws SQLException {
-        return getBookInventoryRecords(rs);
-    }
-
-    /**
-     * Adds a book to the catalog AND inserts a physical copy.
-     *
-     * @apiNote uses a transaction to make sure both happen or none happens.
-     */
-    public void addNewBook(String isbn, String title, String author, String publisher, String category, String edition,
-            String shelfLocation) throws SQLException {
-        String insertBookSql = "INSERT IGNORE INTO Book (ISBN, title, author, publisher, category, edition) VALUES (?, ?, ?, ?, ?, ?)";
-        String insertCopySql = "INSERT INTO BookCopy (isbn, shelf_location, copy_type, status) VALUES (?, ?, 'Physical', 'Available')";
-
-        Connection conn = null;
-        try {
-            conn = Database.getConnection();
-            conn.setAutoCommit(false); // Start Transaction
-
-            // 1. Insert Book (Ignore if ISBN exists)
-            try (PreparedStatement psBook = conn.prepareStatement(insertBookSql)) {
-                psBook.setString(1, isbn);
-                psBook.setString(2, title);
-                psBook.setString(3, author);
-                psBook.setString(4, publisher);
-                psBook.setString(5, category);
-                psBook.setString(6, edition);
-                psBook.executeUpdate();
-            }
-
-            // 2. Insert Copy
-            try (PreparedStatement psCopy = conn.prepareStatement(insertCopySql)) {
-                psCopy.setString(1, isbn);
-                psCopy.setString(2, shelfLocation);
-                psCopy.executeUpdate();
-            }
-
-            conn.commit(); // Commiting the transaction
-        } catch (SQLException e) {
-            if (conn != null)
-                conn.rollback();
-            throw e;
-        } finally {
-            if (conn != null) {
-                conn.setAutoCommit(true);
-                conn.close();
-            }
-        }
-    }
-
-    /// its in the name
-    /// @returns true if updated successfully
-    public boolean markCopyLost(int copyId) throws SQLException {
-        String sql = "UPDATE BookCopy SET status = 'Lost' WHERE copy_id = ?";
-        try (Connection conn = Database.getConnection()) {
-            int updated = Database.executeUpdate(conn, sql, copyId);
-            return updated > 0;
-        }
-    }
-
     // ----------------------
     // Member / Staff methods
     // ----------------------
 
-    public Optional<MemberRecord> findMemberById(int memberId) throws SQLException {
+    public static Optional<MemberRecord> findMemberById(int memberId) throws SQLException {
         // Uses v_AllMembers per queries.sql
         String sql = "SELECT * FROM v_AllMembers WHERE member_id = ?";
         try (Connection conn = Database.getConnection();
@@ -174,7 +36,7 @@ public class LibraryAPI {
         }
     }
 
-    public List<MemberRecord> getMembersByType(String memberType) throws SQLException {
+    public static List<MemberRecord> getMembersByType(String memberType) throws SQLException {
         String sql = "SELECT * FROM v_AllMembers WHERE member_type = ?";
         try (Connection conn = Database.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -195,7 +57,7 @@ public class LibraryAPI {
         }
     }
 
-    public int createMember(String fname, String mname, String lname, String memberType, String email)
+    public static int createMember(String fname, String mname, String lname, String memberType, String email)
             throws SQLException {
         String sql = "INSERT INTO Member (Fname, Mname, Lname, member_type, email) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = Database.getConnection();
@@ -214,7 +76,7 @@ public class LibraryAPI {
         }
     }
 
-    public boolean updateMemberContact(int memberId, String email, String phone) throws SQLException {
+    public static boolean updateMemberContact(int memberId, String email, String phone) throws SQLException {
         // Simple Update - no view needed
         String sql = "UPDATE Member SET email = ? WHERE member_id = ?";
         try (Connection conn = Database.getConnection()) {
@@ -230,7 +92,7 @@ public class LibraryAPI {
      * Issue Book Transaction
      * Checks availability -> Inserts Loan -> Updates Copy Status
      */
-    public String issueBook(int memberId, int copyId, int staffId) throws SQLException {
+    public static String issueBook(int memberId, int copyId, int staffId) throws SQLException {
         String checkStatusSql = "SELECT status FROM BookCopy WHERE copy_id = ?";
         String insertLoanSql = "INSERT INTO Loan (member_id, copy_id, staff_id, issue_date, due_date) VALUES (?, ?, ?, CURDATE(), DATE_ADD(CURDATE(), INTERVAL 14 DAY))";
         String updateCopySql = "UPDATE BookCopy SET status = 'Loaned' WHERE copy_id = ?";
@@ -286,7 +148,7 @@ public class LibraryAPI {
      * Return Book Transaction
      * Finds Copy -> Updates Loan Return Date -> Updates Copy Status
      */
-    public String returnBook(int loanId) throws SQLException {
+    public static String returnBook(int loanId) throws SQLException {
         String findCopySql = "SELECT copy_id FROM Loan WHERE loan_id = ?";
         String updateLoanSql = "UPDATE Loan SET return_date = CURDATE() WHERE loan_id = ?";
         String updateCopySql = "UPDATE BookCopy SET status = 'Available' WHERE copy_id = ?";
@@ -334,7 +196,7 @@ public class LibraryAPI {
     /**
      * Calculates overdue fines using pure SQL batch logic.
      */
-    public void calculateOverdueFines() throws SQLException {
+    public static void calculateOverdueFines() throws SQLException {
         String sql = "INSERT INTO Fine (loan_id, member_id, amount, status, applied_date) " +
                 "SELECT l.loan_id, l.member_id, 10.00, 'Unpaid', CURDATE() " +
                 "FROM Loan l " +
@@ -351,17 +213,17 @@ public class LibraryAPI {
     /**
      * Uses v_LoanDetails (View 2)
      */
-    public List<LoanDetailsRecord> getLoanDetailsForMember(int memberId) throws SQLException {
+    public static List<LoanDetailsRecord> getLoanDetailsForMember(int memberId) throws SQLException {
         String sql = "SELECT * FROM v_LoanDetails WHERE member_id = ?";
         return getLoanDetailsList(sql, memberId);
     }
 
-    public List<LoanDetailsRecord> getOverdueLoans() throws SQLException {
+    public static List<LoanDetailsRecord> getOverdueLoans() throws SQLException {
         String sql = "SELECT * FROM v_LoanDetails WHERE Loan_Status = 'Overdue'";
         return getLoanDetailsList(sql, null);
     }
 
-    private List<LoanDetailsRecord> getLoanDetailsList(String sql, Integer param) throws SQLException {
+    private static List<LoanDetailsRecord> getLoanDetailsList(String sql, Integer param) throws SQLException {
         try (Connection conn = Database.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
             if (param != null)
@@ -388,7 +250,7 @@ public class LibraryAPI {
     /**
      * Uses v_MemberFines (View 8)
      */
-    public List<Map<String, Object>> getMembersWithUnpaidFines() throws SQLException {
+    public static List<Map<String, Object>> getMembersWithUnpaidFines() throws SQLException {
         String sql = "SELECT member_name, amount, applied_date FROM v_MemberFines WHERE status = 'Unpaid'";
         try (Connection conn = Database.getConnection();
                 ResultSet rs = Database.executeQuery(conn, sql)) {
@@ -411,7 +273,7 @@ public class LibraryAPI {
     /**
      * Uses v_RoomReservations (View 3) with dynamic SQL generation
      */
-    public List<Map<String, Object>> searchReservations(java.sql.Date date, String roomType) throws SQLException {
+    public static List<Map<String, Object>> searchReservations(java.sql.Date date, String roomType) throws SQLException {
         StringBuilder sql = new StringBuilder("SELECT * FROM v_RoomReservations WHERE status = 'Pending'");
         if (date != null)
             sql.append(" AND reservation_date = ?");
@@ -444,7 +306,7 @@ public class LibraryAPI {
         }
     }
 
-    public boolean reserveBook(int memberId, String isbn) throws SQLException {
+    public static boolean reserveBook(int memberId, String isbn) throws SQLException {
         String sql = "INSERT INTO Reservation (member_id, book_isbn, reservation_date, status) VALUES (?, ?, CURDATE(), 'Pending')";
         try (Connection conn = Database.getConnection()) {
             return Database.executeUpdate(conn, sql, memberId, isbn) > 0;
@@ -458,7 +320,7 @@ public class LibraryAPI {
     /**
      * Uses v_QuarterlyReport (View 5)
      */
-    public Optional<Map.Entry<String, Integer>> getMostBorrowedBookLastQuarter() throws SQLException {
+    public static Optional<Map.Entry<String, Integer>> getMostBorrowedBookLastQuarter() throws SQLException {
         String sql = "SELECT * FROM v_QuarterlyReport ORDER BY borrow_count DESC LIMIT 1";
         try (Connection conn = Database.getConnection();
                 ResultSet rs = Database.executeQuery(conn, sql)) {
@@ -473,7 +335,7 @@ public class LibraryAPI {
     /**
      * Uses v_NeverBorrowedBooks (View 9)
      */
-    public List<Map<String, Object>> getBooksNeverBorrowed() throws SQLException {
+    public static List<Map<String, Object>> getBooksNeverBorrowed() throws SQLException {
         String sql = "SELECT * FROM v_NeverBorrowedBooks";
         try (Connection conn = Database.getConnection();
                 ResultSet rs = Database.executeQuery(conn, sql)) {
@@ -492,7 +354,7 @@ public class LibraryAPI {
     /**
      * Uses v_MemberFines (View 8)
      */
-    public List<Map<String, Object>> getFinesLastQuarter() throws SQLException {
+    public static List<Map<String, Object>> getFinesLastQuarter() throws SQLException {
         String sql = "SELECT member_name, amount, applied_date FROM v_MemberFines WHERE applied_date >= DATE_SUB(CURDATE(), INTERVAL 3 MONTH)";
         try (Connection conn = Database.getConnection();
                 ResultSet rs = Database.executeQuery(conn, sql)) {
@@ -511,7 +373,7 @@ public class LibraryAPI {
     /**
      * Gets all loan details (for loan management panel)
      */
-    public List<LoanDetailsRecord> getAllLoanDetails() throws SQLException {
+    public static List<LoanDetailsRecord> getAllLoanDetails() throws SQLException {
         String sql = "SELECT * FROM v_LoanDetails";
         return getLoanDetailsList(sql, null);
     }
@@ -519,7 +381,7 @@ public class LibraryAPI {
     /**
      * Gets loans issued by a particular staff member
      */
-    public List<LoanDetailsRecord> getLoansByStaff(int staffId) throws SQLException {
+    public static List<LoanDetailsRecord> getLoansByStaff(int staffId) throws SQLException {
         String sql = "SELECT * FROM v_LoanDetails WHERE staff_id = ?";
         try (Connection conn = Database.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -546,7 +408,7 @@ public class LibraryAPI {
     /**
      * Uses v_BookPopularity (View 4) - Total loans per book
      */
-    public List<Map<String, Object>> getTotalLoansPerBook() throws SQLException {
+    public static List<Map<String, Object>> getTotalLoansPerBook() throws SQLException {
         String sql = "SELECT * FROM v_BookPopularity ORDER BY total_loans DESC";
         try (Connection conn = Database.getConnection();
                 ResultSet rs = Database.executeQuery(conn, sql)) {
@@ -565,7 +427,7 @@ public class LibraryAPI {
     /**
      * Gets all book reservations
      */
-    public List<Map<String, Object>> getAllBookReservations() throws SQLException {
+    public static List<Map<String, Object>> getAllBookReservations() throws SQLException {
         String sql = "SELECT * FROM v_AllReservations WHERE book_isbn IS NOT NULL";
         try (Connection conn = Database.getConnection();
                 ResultSet rs = Database.executeQuery(conn, sql)) {
@@ -586,7 +448,7 @@ public class LibraryAPI {
     /**
      * Gets members who have reserved a book currently on loan
      */
-    public List<Map<String, Object>> getMembersWithReservedBooksOnLoan() throws SQLException {
+    public static List<Map<String, Object>> getMembersWithReservedBooksOnLoan() throws SQLException {
         String sql = "SELECT r.reservation_id, r.member_id, r.book_isbn, " +
                 "CONCAT(m.Fname, ' ', m.Lname) AS member_name, r.status " +
                 "FROM Reservation r " +
@@ -612,31 +474,12 @@ public class LibraryAPI {
         }
     }
 
-    /**
-     * Updates book information
-     */
-    public boolean updateBook(String isbn, String title, String author, String publisher,
-            String category, String edition) throws SQLException {
-        String sql = "UPDATE Book SET title = ?, author = ?, publisher = ?, category = ?, edition = ? WHERE isbn = ?";
-        try (Connection conn = Database.getConnection()) {
-            return Database.executeUpdate(conn, sql, title, author, publisher, category, edition, isbn) > 0;
-        }
-    }
 
-    /**
-     * Updates book copy shelf location
-     */
-    public boolean updateBookCopyLocation(int copyId, String shelfLocation) throws SQLException {
-        String sql = "UPDATE BookCopy SET shelf_location = ? WHERE copy_id = ?";
-        try (Connection conn = Database.getConnection()) {
-            return Database.executeUpdate(conn, sql, shelfLocation, copyId) > 0;
-        }
-    }
 
     /**
      * Updates reservation status
      */
-    public boolean updateReservationStatus(int reservationId, String status) throws SQLException {
+    public static boolean updateReservationStatus(int reservationId, String status) throws SQLException {
         String sql = "UPDATE Reservation SET status = ? WHERE reservation_id = ?";
         try (Connection conn = Database.getConnection()) {
             return Database.executeUpdate(conn, sql, status, reservationId) > 0;
