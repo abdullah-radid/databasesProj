@@ -1,13 +1,10 @@
--- ---------------------------------------------------------
 -- Database Creation
--- ---------------------------------------------------------
 DROP DATABASE IF EXISTS library_db;
 CREATE DATABASE library_db;
 USE library_db;
 
--- ---------------------------------------------------------
+
 -- 1. Core Entities
--- ---------------------------------------------------------
 
 CREATE TABLE Member (
     member_id INT PRIMARY KEY AUTO_INCREMENT,
@@ -40,10 +37,7 @@ CREATE TABLE Book (
     edition VARCHAR(20)
 );
 
--- ---------------------------------------------------------
--- 2. Transactions (Updated to use ISBN directly)
--- ---------------------------------------------------------
-
+-- 2. Transactions 
 CREATE TABLE Loan (
     loan_id INT PRIMARY KEY AUTO_INCREMENT,
     member_id INT,
@@ -64,15 +58,14 @@ CREATE TABLE Fine (
     FOREIGN KEY (loan_id) REFERENCES Loan(loan_id) -- Links to the specific Loan transaction
 );
 
--- ---------------------------------------------------------
 -- 3. Data Input Statements
--- ---------------------------------------------------------
-
 INSERT INTO Member (first_name, middle_name, last_name, member_type, contact_info) VALUES 
 ('Jonathan', 'D.', 'Edwards', 'Student', 'jedwards@towson.edu'),
-('Saif', 'A.', 'Al-Name', 'Student', 'saif@towson.edu'),
-('Landon', 'B.', 'Lastname', 'Student', 'landon@towson.edu'),
-('Dr.', 'Jane', 'Professor', 'Teacher', 'jane@towson.edu');
+('Saif', 'A.', 'Zagloul', 'Student', 'saif@towson.edu'),
+('Landon', 'B.', 'Pasana', 'Student', 'landon@towson.edu'),
+('Abdullah', 'NA', 'Radid', 'Student', 'abdullah@towson.edu'),
+('Christian', 'idk', 'idk', 'Student', 'christian@towson.edu'),
+('Dr.Chhaya', 'NA', 'Kulkarni', 'Professor', 'ckulkarni@towson.edu');
 
 INSERT INTO Staff (first_name, last_name, contact_info) VALUES 
 ('Alice', 'Librarian', 'desk@library.edu'),
@@ -84,26 +77,24 @@ INSERT INTO Room (room_name, capacity) VALUES
 ('Computer Lab A', 30);
 
 INSERT INTO Book (isbn, title, author, publisher, category, edition) VALUES 
-('978-013376', 'Java: A Beginner Guide', 'Herbert Schildt', 'Oracle Press', 'Technology', '8th'),
-('978-032112', 'Database Systems', 'C.J. Date', 'Pearson', 'Education', '6th'),
-('978-054400', 'The Hobbit', 'J.R.R. Tolkien', 'Mariner Books', 'Fiction', '1st');
+('1001', 'Java: A Beginner Guide', 'Herbert Schildt', 'Oracle Press', 'Technology', '8th'),
+('1002', 'Database Systems', 'C.J. Date', 'Pearson', 'Education', '6th'),
+('1003', 'The Hobbit', 'J.R.R. Tolkien', 'Mariner Books', 'Fiction', '1st');
 
 -- Insert Loans (Now using ISBNs)
 -- Jonathan borrows Java book
 INSERT INTO Loan (member_id, isbn, issue_date, due_date, return_date) VALUES 
-(1, '978-013376', '2025-10-01', '2025-10-15', NULL); 
+(1, '1001', '2025-10-01', '2025-10-15', NULL); 
 
 -- Saif borrows Database book (Returned late)
 INSERT INTO Loan (member_id, isbn, issue_date, due_date, return_date) VALUES 
-(2, '978-032112', '2025-09-01', '2025-09-15', '2025-12-01');
+(2, '1002', '2025-09-01', '2025-09-15', '2025-10-28');
 
 -- Insert Fine (Linked to Saif's loan #2)
 INSERT INTO Fine (loan_id, amount, status, applied_date) VALUES 
-(2, 15.00, 'Unpaid', '2025-12-01');
+(2, 15.00, 'Unpaid', '2025-10-29');
 
--- ---------------------------------------------------------
 -- 4. Verification
--- ---------------------------------------------------------
 SELECT * FROM Member;
 SELECT * FROM Book;
 SELECT * FROM Loan;
