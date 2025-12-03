@@ -11,7 +11,7 @@ public class LibraryTU extends JFrame {
     // ===== DB CONFIG (change user/password if needed) =====
     private String url = "jdbc:mysql://localhost:3306/library_db";
     private String user = "root";
-    private String password = "Paniarup115!";
+    private String password = "12345678";
 
     // ===== MEMBER FIELDS =====
     private JTextField memberIDField, memberFirstNameField, memberMiddleNameField,
@@ -43,6 +43,9 @@ public class LibraryTU extends JFrame {
 
     // ===== CONSTRUCTOR =====
     public LibraryTU() {
+        // Initialize database if it doesn't exist
+        initializeDatabase();
+
         setTitle("Towson Library DB");
         setSize(900, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -70,8 +73,8 @@ public class LibraryTU extends JFrame {
         String sql = "SELECT * FROM " + tableName;
 
         try (Connection conn = getConn();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+                Statement stmt = conn.createStatement();
+                ResultSet rs = stmt.executeQuery(sql)) {
 
             ResultSetMetaData md = rs.getMetaData();
             int colCount = md.getColumnCount();
@@ -92,7 +95,8 @@ public class LibraryTU extends JFrame {
                 String[] row = new String[colCount];
                 for (int i = 0; i < colCount; i++) {
                     String val = rs.getString(i + 1);
-                    if (val == null) val = "null";
+                    if (val == null)
+                        val = "null";
                     row[i] = val;
                     if (val.length() > widths[i]) {
                         widths[i] = val.length();
@@ -118,8 +122,10 @@ public class LibraryTU extends JFrame {
     }
 
     private String padRight(String text, int width) {
-        if (text == null) text = "";
-        if (text.length() >= width) return text;
+        if (text == null)
+            text = "";
+        if (text.length() >= width)
+            return text;
         StringBuilder sb = new StringBuilder(text);
         while (sb.length() < width) {
             sb.append(' ');
@@ -197,10 +203,13 @@ public class LibraryTU extends JFrame {
                 "VALUES (?, ?, ?, ?, ?)";
 
         try (Connection conn = getConn();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, first);
-            if (middle.isEmpty()) ps.setNull(2, Types.VARCHAR); else ps.setString(2, middle);
+            if (middle.isEmpty())
+                ps.setNull(2, Types.VARCHAR);
+            else
+                ps.setString(2, middle);
             ps.setString(3, last);
             ps.setString(4, type);
             ps.setString(5, contact);
@@ -230,10 +239,13 @@ public class LibraryTU extends JFrame {
                 "member_type = ?, contact_info = ? WHERE member_id = ?";
 
         try (Connection conn = getConn();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, first);
-            if (middle.isEmpty()) ps.setNull(2, Types.VARCHAR); else ps.setString(2, middle);
+            if (middle.isEmpty())
+                ps.setNull(2, Types.VARCHAR);
+            else
+                ps.setString(2, middle);
             ps.setString(3, last);
             ps.setString(4, type);
             ps.setString(5, contact);
@@ -256,7 +268,7 @@ public class LibraryTU extends JFrame {
         String sql = "DELETE FROM Member WHERE member_id = ?";
 
         try (Connection conn = getConn();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, Integer.parseInt(idText));
             int rows = ps.executeUpdate();
@@ -325,7 +337,7 @@ public class LibraryTU extends JFrame {
         String sql = "INSERT INTO Staff (first_name, last_name, contact_info) VALUES (?, ?, ?)";
 
         try (Connection conn = getConn();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, first);
             ps.setString(2, last);
@@ -353,7 +365,7 @@ public class LibraryTU extends JFrame {
         String sql = "UPDATE Staff SET first_name = ?, last_name = ?, contact_info = ? WHERE staff_id = ?";
 
         try (Connection conn = getConn();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, first);
             ps.setString(2, last);
@@ -377,7 +389,7 @@ public class LibraryTU extends JFrame {
         String sql = "DELETE FROM Staff WHERE staff_id = ?";
 
         try (Connection conn = getConn();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, Integer.parseInt(idText));
             int rows = ps.executeUpdate();
@@ -441,10 +453,16 @@ public class LibraryTU extends JFrame {
         String sql = "INSERT INTO Room (room_name, capacity) VALUES (?, ?)";
 
         try (Connection conn = getConn();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            if (name.isEmpty()) ps.setNull(1, Types.VARCHAR); else ps.setString(1, name);
-            if (capText.isEmpty()) ps.setNull(2, Types.INTEGER); else ps.setInt(2, Integer.parseInt(capText));
+            if (name.isEmpty())
+                ps.setNull(1, Types.VARCHAR);
+            else
+                ps.setString(1, name);
+            if (capText.isEmpty())
+                ps.setNull(2, Types.INTEGER);
+            else
+                ps.setInt(2, Integer.parseInt(capText));
 
             int rows = ps.executeUpdate();
             roomOutput.setText(rows + " Room(s) added.");
@@ -467,10 +485,16 @@ public class LibraryTU extends JFrame {
         String sql = "UPDATE Room SET room_name = ?, capacity = ? WHERE room_id = ?";
 
         try (Connection conn = getConn();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            if (name.isEmpty()) ps.setNull(1, Types.VARCHAR); else ps.setString(1, name);
-            if (capText.isEmpty()) ps.setNull(2, Types.INTEGER); else ps.setInt(2, Integer.parseInt(capText));
+            if (name.isEmpty())
+                ps.setNull(1, Types.VARCHAR);
+            else
+                ps.setString(1, name);
+            if (capText.isEmpty())
+                ps.setNull(2, Types.INTEGER);
+            else
+                ps.setInt(2, Integer.parseInt(capText));
             ps.setInt(3, Integer.parseInt(idText));
 
             int rows = ps.executeUpdate();
@@ -491,7 +515,7 @@ public class LibraryTU extends JFrame {
         String sql = "DELETE FROM Room WHERE room_id = ?";
 
         try (Connection conn = getConn();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, Integer.parseInt(idText));
             int rows = ps.executeUpdate();
@@ -572,14 +596,23 @@ public class LibraryTU extends JFrame {
                 "VALUES (?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = getConn();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, isbn);
             ps.setString(2, title);
             ps.setString(3, author);
-            if (publisher.isEmpty()) ps.setNull(4, Types.VARCHAR); else ps.setString(4, publisher);
-            if (category.isEmpty()) ps.setNull(5, Types.VARCHAR); else ps.setString(5, category);
-            if (edition.isEmpty()) ps.setNull(6, Types.VARCHAR); else ps.setString(6, edition);
+            if (publisher.isEmpty())
+                ps.setNull(4, Types.VARCHAR);
+            else
+                ps.setString(4, publisher);
+            if (category.isEmpty())
+                ps.setNull(5, Types.VARCHAR);
+            else
+                ps.setString(5, category);
+            if (edition.isEmpty())
+                ps.setNull(6, Types.VARCHAR);
+            else
+                ps.setString(6, edition);
 
             int rows = ps.executeUpdate();
             bookOutput.setText(rows + " Book(s) added.");
@@ -606,13 +639,22 @@ public class LibraryTU extends JFrame {
                 "category = ?, edition = ? WHERE isbn = ?";
 
         try (Connection conn = getConn();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, title);
             ps.setString(2, author);
-            if (publisher.isEmpty()) ps.setNull(3, Types.VARCHAR); else ps.setString(3, publisher);
-            if (category.isEmpty()) ps.setNull(4, Types.VARCHAR); else ps.setString(4, category);
-            if (edition.isEmpty()) ps.setNull(5, Types.VARCHAR); else ps.setString(5, edition);
+            if (publisher.isEmpty())
+                ps.setNull(3, Types.VARCHAR);
+            else
+                ps.setString(3, publisher);
+            if (category.isEmpty())
+                ps.setNull(4, Types.VARCHAR);
+            else
+                ps.setString(4, category);
+            if (edition.isEmpty())
+                ps.setNull(5, Types.VARCHAR);
+            else
+                ps.setString(5, edition);
             ps.setString(6, isbn);
 
             int rows = ps.executeUpdate();
@@ -633,7 +675,7 @@ public class LibraryTU extends JFrame {
         String sql = "DELETE FROM Book WHERE isbn = ?";
 
         try (Connection conn = getConn();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, isbn);
             int rows = ps.executeUpdate();
@@ -704,10 +746,10 @@ public class LibraryTU extends JFrame {
 
     private void addLoan() {
         String memberID = loanMemberIDField.getText().trim();
-        String isbn     = loanIsbnField.getText().trim();
-        String issue    = loanIssueDateField.getText().trim();
-        String due      = loanDueDateField.getText().trim();
-        String ret      = loanReturnDateField.getText().trim();
+        String isbn = loanIsbnField.getText().trim();
+        String issue = loanIssueDateField.getText().trim();
+        String due = loanDueDateField.getText().trim();
+        String ret = loanReturnDateField.getText().trim();
 
         if (isbn.isEmpty()) {
             loanOutput.setText("ISBN is required.");
@@ -765,7 +807,7 @@ public class LibraryTU extends JFrame {
         }
 
         String insertSql = "INSERT INTO Loan (member_id, isbn, issue_date, due_date, return_date) " +
-                           "VALUES (?, ?, ?, ?, ?)";
+                "VALUES (?, ?, ?, ?, ?)";
 
         try (Connection conn = getConn()) {
 
@@ -812,15 +854,19 @@ public class LibraryTU extends JFrame {
 
             try (PreparedStatement ps = conn.prepareStatement(insertSql)) {
 
-                if (memberID.isEmpty()) ps.setNull(1, Types.INTEGER);
-                else ps.setInt(1, Integer.parseInt(memberID));
+                if (memberID.isEmpty())
+                    ps.setNull(1, Types.INTEGER);
+                else
+                    ps.setInt(1, Integer.parseInt(memberID));
 
                 ps.setString(2, isbn);
                 ps.setDate(3, java.sql.Date.valueOf(issueLocal));
                 ps.setDate(4, java.sql.Date.valueOf(dueLocal));
 
-                if (retLocal == null) ps.setNull(5, Types.DATE);
-                else ps.setDate(5, java.sql.Date.valueOf(retLocal));
+                if (retLocal == null)
+                    ps.setNull(5, Types.DATE);
+                else
+                    ps.setDate(5, java.sql.Date.valueOf(retLocal));
 
                 int rows = ps.executeUpdate();
                 loanOutput.setText(rows + " Loan(s) added.");
@@ -832,12 +878,12 @@ public class LibraryTU extends JFrame {
     }
 
     private void updateLoan() {
-        String idText   = loanIDField.getText().trim();
+        String idText = loanIDField.getText().trim();
         String memberID = loanMemberIDField.getText().trim();
-        String isbn     = loanIsbnField.getText().trim();
-        String issue    = loanIssueDateField.getText().trim();
-        String due      = loanDueDateField.getText().trim();
-        String ret      = loanReturnDateField.getText().trim();
+        String isbn = loanIsbnField.getText().trim();
+        String issue = loanIssueDateField.getText().trim();
+        String due = loanDueDateField.getText().trim();
+        String ret = loanReturnDateField.getText().trim();
 
         if (idText.isEmpty()) {
             loanOutput.setText("Enter loan_id to update.");
@@ -899,7 +945,7 @@ public class LibraryTU extends JFrame {
         }
 
         String updateSql = "UPDATE Loan SET member_id = ?, isbn = ?, issue_date = ?, " +
-                           "due_date = ?, return_date = ? WHERE loan_id = ?";
+                "due_date = ?, return_date = ? WHERE loan_id = ?";
 
         try (Connection conn = getConn()) {
 
@@ -933,7 +979,7 @@ public class LibraryTU extends JFrame {
 
             // validation: book not already on open loan in another row
             String checkSql = "SELECT COUNT(*) FROM Loan " +
-                              "WHERE isbn = ? AND return_date IS NULL AND loan_id <> ?";
+                    "WHERE isbn = ? AND return_date IS NULL AND loan_id <> ?";
             try (PreparedStatement checkPs = conn.prepareStatement(checkSql)) {
                 checkPs.setString(1, isbn);
                 checkPs.setInt(2, Integer.parseInt(idText));
@@ -948,15 +994,19 @@ public class LibraryTU extends JFrame {
 
             try (PreparedStatement ps = conn.prepareStatement(updateSql)) {
 
-                if (memberID.isEmpty()) ps.setNull(1, Types.INTEGER);
-                else ps.setInt(1, Integer.parseInt(memberID));
+                if (memberID.isEmpty())
+                    ps.setNull(1, Types.INTEGER);
+                else
+                    ps.setInt(1, Integer.parseInt(memberID));
 
                 ps.setString(2, isbn);
                 ps.setDate(3, java.sql.Date.valueOf(issueLocal));
                 ps.setDate(4, java.sql.Date.valueOf(dueLocal));
 
-                if (retLocal == null) ps.setNull(5, Types.DATE);
-                else ps.setDate(5, java.sql.Date.valueOf(retLocal));
+                if (retLocal == null)
+                    ps.setNull(5, Types.DATE);
+                else
+                    ps.setDate(5, java.sql.Date.valueOf(retLocal));
 
                 ps.setInt(6, Integer.parseInt(idText));
 
@@ -979,7 +1029,7 @@ public class LibraryTU extends JFrame {
         String sql = "DELETE FROM Loan WHERE loan_id = ?";
 
         try (Connection conn = getConn();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, Integer.parseInt(idText));
             int rows = ps.executeUpdate();
@@ -1054,21 +1104,29 @@ public class LibraryTU extends JFrame {
                 "VALUES (?, ?, ?, ?)";
 
         try (Connection conn = getConn();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            if (loanID.isEmpty()) ps.setNull(1, Types.INTEGER);
-            else ps.setInt(1, Integer.parseInt(loanID));
+            if (loanID.isEmpty())
+                ps.setNull(1, Types.INTEGER);
+            else
+                ps.setInt(1, Integer.parseInt(loanID));
 
-            if (amountText.isEmpty()) ps.setNull(2, Types.DECIMAL);
+            if (amountText.isEmpty())
+                ps.setNull(2, Types.DECIMAL);
             else {
                 BigDecimal bd = BigDecimal.valueOf(Double.parseDouble(amountText));
                 ps.setBigDecimal(2, bd);
             }
 
-            if (status.isEmpty()) ps.setNull(3, Types.VARCHAR); else ps.setString(3, status);
+            if (status.isEmpty())
+                ps.setNull(3, Types.VARCHAR);
+            else
+                ps.setString(3, status);
 
-            if (applied.isEmpty()) ps.setNull(4, Types.DATE);
-            else ps.setDate(4, java.sql.Date.valueOf(applied));
+            if (applied.isEmpty())
+                ps.setNull(4, Types.DATE);
+            else
+                ps.setDate(4, java.sql.Date.valueOf(applied));
 
             int rows = ps.executeUpdate();
             fineOutput.setText(rows + " Fine(s) added.");
@@ -1093,21 +1151,29 @@ public class LibraryTU extends JFrame {
         String sql = "UPDATE Fine SET loan_id = ?, amount = ?, status = ?, applied_date = ? WHERE fine_id = ?";
 
         try (Connection conn = getConn();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            if (loanID.isEmpty()) ps.setNull(1, Types.INTEGER);
-            else ps.setInt(1, Integer.parseInt(loanID));
+            if (loanID.isEmpty())
+                ps.setNull(1, Types.INTEGER);
+            else
+                ps.setInt(1, Integer.parseInt(loanID));
 
-            if (amountText.isEmpty()) ps.setNull(2, Types.DECIMAL);
+            if (amountText.isEmpty())
+                ps.setNull(2, Types.DECIMAL);
             else {
                 BigDecimal bd = BigDecimal.valueOf(Double.parseDouble(amountText));
                 ps.setBigDecimal(2, bd);
             }
 
-            if (status.isEmpty()) ps.setNull(3, Types.VARCHAR); else ps.setString(3, status);
+            if (status.isEmpty())
+                ps.setNull(3, Types.VARCHAR);
+            else
+                ps.setString(3, status);
 
-            if (applied.isEmpty()) ps.setNull(4, Types.DATE);
-            else ps.setDate(4, java.sql.Date.valueOf(applied));
+            if (applied.isEmpty())
+                ps.setNull(4, Types.DATE);
+            else
+                ps.setDate(4, java.sql.Date.valueOf(applied));
 
             ps.setInt(5, Integer.parseInt(idText));
 
@@ -1129,7 +1195,7 @@ public class LibraryTU extends JFrame {
         String sql = "DELETE FROM Fine WHERE fine_id = ?";
 
         try (Connection conn = getConn();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, Integer.parseInt(idText));
             int rows = ps.executeUpdate();
@@ -1141,6 +1207,148 @@ public class LibraryTU extends JFrame {
     }
 
     // ====================== DB CONNECTION ======================
+
+    // ====================== DATABASE INITIALIZATION ======================
+
+    /**
+     * Initialize database if it doesn't exist.
+     * Creates the library_db database, all tables, and inserts sample data.
+     */
+    private void initializeDatabase() {
+        try {
+            // Connect without specifying database to check if it exists
+            String baseUrl = "jdbc:mysql://localhost:3306/";
+            Class.forName("com.mysql.cj.jdbc.Driver");
+
+            try (Connection conn = DriverManager.getConnection(baseUrl, user, password);
+                    Statement stmt = conn.createStatement()) {
+
+                // Check if database exists
+                ResultSet rs = stmt.executeQuery("SHOW DATABASES LIKE 'library_db'");
+                if (!rs.next()) {
+                    // Database doesn't exist, create it
+                    System.out.println("Creating library_db database...");
+                    stmt.executeUpdate("CREATE DATABASE library_db");
+                    stmt.executeUpdate("USE library_db");
+
+                    // Create tables
+                    createTables(stmt);
+
+                    // Insert sample data
+                    insertSampleData(stmt);
+
+                    JOptionPane.showMessageDialog(this,
+                            "Database initialized successfully!\nSample data has been loaded.",
+                            "Setup Complete",
+                            JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    System.out.println("Database library_db already exists.");
+                }
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this,
+                    "Database initialization failed: " + ex.getMessage() +
+                            "\n\nPlease ensure MySQL is running and credentials are correct.",
+                    "Database Error",
+                    JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
+        }
+    }
+
+    private void createTables(Statement stmt) throws Exception {
+        // Create Member table
+        stmt.executeUpdate("CREATE TABLE Member (" +
+                "member_id INT PRIMARY KEY AUTO_INCREMENT, " +
+                "first_name VARCHAR(50) NOT NULL, " +
+                "middle_name VARCHAR(50), " +
+                "last_name VARCHAR(50) NOT NULL, " +
+                "member_type VARCHAR(20) NOT NULL, " +
+                "contact_info VARCHAR(100) NOT NULL)");
+
+        // Create Staff table
+        stmt.executeUpdate("CREATE TABLE Staff (" +
+                "staff_id INT PRIMARY KEY AUTO_INCREMENT, " +
+                "first_name VARCHAR(50) NOT NULL, " +
+                "last_name VARCHAR(50) NOT NULL, " +
+                "contact_info VARCHAR(100) NOT NULL)");
+
+        // Create Room table
+        stmt.executeUpdate("CREATE TABLE Room (" +
+                "room_id INT PRIMARY KEY AUTO_INCREMENT, " +
+                "room_name VARCHAR(50), " +
+                "capacity INT)");
+
+        // Create Book table
+        stmt.executeUpdate("CREATE TABLE Book (" +
+                "isbn VARCHAR(20) PRIMARY KEY, " +
+                "title VARCHAR(100) NOT NULL, " +
+                "author VARCHAR(100) NOT NULL, " +
+                "publisher VARCHAR(100), " +
+                "category VARCHAR(50), " +
+                "edition VARCHAR(20))");
+
+        // Create Loan table
+        stmt.executeUpdate("CREATE TABLE Loan (" +
+                "loan_id INT PRIMARY KEY AUTO_INCREMENT, " +
+                "member_id INT, " +
+                "isbn VARCHAR(20), " +
+                "issue_date DATE NOT NULL, " +
+                "due_date DATE NOT NULL, " +
+                "return_date DATE, " +
+                "FOREIGN KEY (member_id) REFERENCES Member(member_id), " +
+                "FOREIGN KEY (isbn) REFERENCES Book(isbn))");
+
+        // Create Fine table
+        stmt.executeUpdate("CREATE TABLE Fine (" +
+                "fine_id INT PRIMARY KEY AUTO_INCREMENT, " +
+                "loan_id INT, " +
+                "amount DECIMAL(10, 2) NOT NULL, " +
+                "status VARCHAR(20) DEFAULT 'Unpaid', " +
+                "applied_date DATE, " +
+                "FOREIGN KEY (loan_id) REFERENCES Loan(loan_id))");
+
+        System.out.println("Tables created successfully.");
+    }
+
+    private void insertSampleData(Statement stmt) throws Exception {
+        // Insert Members
+        stmt.executeUpdate(
+                "INSERT INTO Member (first_name, middle_name, last_name, member_type, contact_info) VALUES " +
+                        "('Jonathan', 'D.', 'Edwards', 'Student', 'jedwards@towson.edu'), " +
+                        "('Saif', 'A.', 'Al-Name', 'Student', 'saif@towson.edu'), " +
+                        "('Landon', 'B.', 'Lastname', 'Student', 'landon@towson.edu'), " +
+                        "('Dr.', 'Jane', 'Professor', 'Teacher', 'jane@towson.edu')");
+
+        // Insert Staff
+        stmt.executeUpdate("INSERT INTO Staff (first_name, last_name, contact_info) VALUES " +
+                "('Alice', 'Librarian', 'desk@library.edu'), " +
+                "('Bob', 'Manager', 'manager@library.edu')");
+
+        // Insert Rooms
+        stmt.executeUpdate("INSERT INTO Room (room_name, capacity) VALUES " +
+                "('Study Room 101', 4), " +
+                "('Study Room 102', 6), " +
+                "('Computer Lab A', 30)");
+
+        // Insert Books
+        stmt.executeUpdate("INSERT INTO Book (isbn, title, author, publisher, category, edition) VALUES " +
+                "('978-013376', 'Java: A Beginner Guide', 'Herbert Schildt', 'Oracle Press', 'Technology', '8th'), " +
+                "('978-032112', 'Database Systems', 'C.J. Date', 'Pearson', 'Education', '6th'), " +
+                "('978-054400', 'The Hobbit', 'J.R.R. Tolkien', 'Mariner Books', 'Fiction', '1st')");
+
+        // Insert Loans
+        stmt.executeUpdate("INSERT INTO Loan (member_id, isbn, issue_date, due_date, return_date) VALUES " +
+                "(1, '978-013376', '2025-10-01', '2025-10-15', NULL), " +
+                "(2, '978-032112', '2025-09-01', '2025-09-15', '2025-12-01')");
+
+        // Insert Fines
+        stmt.executeUpdate("INSERT INTO Fine (loan_id, amount, status, applied_date) VALUES " +
+                "(2, 15.00, 'Unpaid', '2025-12-01')");
+
+        System.out.println("Sample data inserted successfully.");
+    }
+
+    // ====================== DATABASE CONNECTION ======================
 
     private Connection getConn() throws Exception {
         Class.forName("com.mysql.cj.jdbc.Driver");
