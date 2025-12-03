@@ -2,21 +2,19 @@ package UI.Panels;
 
 import API.BooksAPI;
 import API.DTO.BookInventoryRecord;
-import API.LibraryAPI;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.print.Book;
 import java.sql.SQLException;
 import java.util.List;
 
 import static UI.Utility.addLabelAndField;
 
 /// Book Management Panel
-public class BookPanel extends JPanel {
+public class BooksPanel extends JPanel {
 
-    public BookPanel() {
+    public BooksPanel() {
         super(new BorderLayout());
         // Top panel with buttons
         JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));

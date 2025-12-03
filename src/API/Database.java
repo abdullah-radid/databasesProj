@@ -12,7 +12,7 @@ import java.util.List;
 public final class Database {
     private static final String URL = "jdbc:mysql://localhost:3306/library_db";
     private static final String USERNAME = "root";
-    private static final String PASSWORD = "COSC457"; // set your password
+    private static final String PASSWORD = null; // set your password
 
 
     /// Gets mysql connection using the privately set username and pass
@@ -30,8 +30,10 @@ public final class Database {
      */
     public static boolean testConnection() {
         try (Connection conn = Database.getConnection()) {
+            System.out.println("Connected to " + conn.getMetaData().getDatabaseProductName());
             return conn != null && !conn.isClosed();
         } catch (SQLException e) {
+            System.err.println("Failed to connect to the database\nMake sure the username and password in API\\Database.java is correct");
             return false;
         }
     }

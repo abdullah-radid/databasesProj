@@ -12,9 +12,9 @@ import java.sql.SQLException;
 import java.util.List;
 
 /// Panel for Member Management
-public class MemberPanel extends JPanel {
+public class MembersPanel extends JPanel {
 
-    public MemberPanel() {
+    public MembersPanel() {
         super(new BorderLayout());
 
         JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -209,7 +209,7 @@ public class MemberPanel extends JPanel {
             return;
         }
 
-        int memberId = (Integer) ((DefaultTableModel) table.getModel()).getValueAt(selectedRow, 0);
+        int memberId = (Integer) table.getModel().getValueAt(selectedRow, 0);
 
         JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(parent),
                 "Borrowing History", true);
