@@ -5,7 +5,7 @@
  * UPDATED: Aligned with simplified schema (No BookCopy, No Reservation, No Staff on Loans).
  */
 
-USE library_db;
+USE library_db2;
 
 -- ==========================================================
 -- SECTION 1: VIEWS (For populating Java JTables)

@@ -1,6 +1,6 @@
-DROP Database IF EXISTS library_db;
-CREATE DATABASE library_db;
-USE library_db;
+DROP Database IF EXISTS library_db2;
+CREATE DATABASE library_db2;
+USE library_db2;
 
 
 CREATE TABLE Staff (

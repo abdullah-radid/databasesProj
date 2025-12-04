@@ -8,7 +8,7 @@ import java.sql.*;
  *  @apiNote java doesnt have static classes so I just marked this final
 */
 public final class Database {
-    private static final String URL = "jdbc:mysql://localhost:3306/library_db";
+    private static final String URL = "jdbc:mysql://localhost:3306/library_db2";
     private static String USERNAME = null;
     private static String PASSWORD = null; // set your password
 
